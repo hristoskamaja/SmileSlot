@@ -1,8 +1,13 @@
 """Fill the database with sample data. Run with:  python -m app.seed
 
 Warning: this deletes all existing data first, so it can be run again safely.
+
+All dates are relative to today (clinic time), so the demo always looks alive:
+a few past days, the current week and the next 3 weeks. A fixed random seed makes the
+result the same every time it is run on the same day.
 """
 
+import random
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -27,16 +32,35 @@ SERVICES = [
     {"name": "Whitening", "duration_minutes": 45, "description": "In-clinic teeth whitening treatment."},
 ]
 
-# One weekly schedule per doctor: (day offset from Monday, start time, service name).
-# Times within a day never overlap.
-SCHEDULES = [
-    [(0, "09:00", "Check-up"), (0, "10:00", "Cleaning"), (1, "11:00", "Filling"),
-     (2, "09:30", "Check-up"), (3, "14:00", "Cleaning"), (4, "10:00", "Check-up"),
-     (5, "09:00", "Cleaning")],
-    [(0, "13:00", "Filling"), (1, "09:00", "Check-up"), (2, "11:00", "Filling"),
-     (3, "09:00", "Cleaning"), (4, "15:00", "Filling"), (5, "10:00", "Check-up")],
-    [(0, "11:00", "Whitening"), (1, "14:00", "Whitening"), (2, "16:00", "Check-up"),
-     (3, "10:30", "Whitening"), (4, "12:00", "Cleaning"), (5, "11:00", "Whitening")],
+# Times are in minutes after midnight, e.g. 9 * 60 + 30 = 09:30.
+# Each doctor starts at a different time (the same order as DOCTORS).
+SHIFT_STARTS = [8 * 60 + 30, 9 * 60, 10 * 60]
+WEEKDAY_END = 18 * 60
+SATURDAY_END = 13 * 60  # Saturday is a half day
+LUNCH_START = 13 * 60
+LUNCH_END = 14 * 60
+GAPS = [0, 15, 30]  # a random pause between two appointments, in minutes
+STEP = 15  # slots start on a quarter of an hour, like the "Add slot" form
+
+PAST_DAYS = 4  # how many days before today get slots
+WEEKS_AHEAD = 3  # full weeks after the current one
+FUTURE_BOOKED_SHARE = 0.35
+PAST_BOOKINGS = 6
+
+PATIENTS = [
+    "Ivana Trajkovska", "Petar Ilievski", "Marija Dimitrova", "Stefan Kostov", "Jovana Angelova",
+    "Nikola Georgiev", "Elena Mitreska", "Aleksandar Pavlov", "Teodora Ristova", "Filip Naumov",
+    "Simona Jovanovska", "Darko Spasov", "Katerina Bogdanova", "Martin Todorov", "Biljana Stankova",
+    "Viktor Atanasov", "Sara Velkovska", "Goran Krstev", "Lidija Markovska", "Borjan Zdravkov",
+]
+
+NOTES = [
+    "First visit, a bit nervous.",
+    "Prefer an early appointment if possible.",
+    "I wear braces.",
+    "Please call before the visit.",
+    "Sensitive teeth.",
+    "Coming with my child.",
 ]
 
 
@@ -44,7 +68,41 @@ def monday_of(day: date) -> date:
     return day - timedelta(days=day.weekday())
 
 
+def make_day_times(rng: random.Random, services: list[Service], start: int, end: int) -> list[tuple[int, Service]]:
+    """One doctor's day: a list of (start minute, service), one after the other.
+    They never overlap, skip the lunch hour, and always end by `end`."""
+    day = []
+    cursor = start
+    index = rng.randrange(len(services))  # the services take turns, so every doctor offers all four
+    while True:
+        service = services[index % len(services)]
+        # A slot that would touch the lunch hour starts after it instead.
+        if cursor < LUNCH_END and cursor + service.duration_minutes > LUNCH_START:
+            cursor = LUNCH_END
+        if cursor + service.duration_minutes > end:
+            return day
+        day.append((cursor, service))
+        cursor += service.duration_minutes + rng.choice(GAPS)
+        cursor = -(-cursor // STEP) * STEP  # round up to the next quarter of an hour
+        index += 1
+
+
+def make_booking(rng: random.Random, slot: Slot) -> Booking:
+    name = rng.choice(PATIENTS)
+    phone = f"+389 7{rng.randint(0, 9)} {rng.randint(100, 999)} {rng.randint(100, 999)}" if rng.random() < 0.5 else None
+    note = rng.choice(NOTES) if rng.random() < 0.35 else None
+    return Booking(
+        slot=slot,
+        patient_name=name,
+        patient_email=name.lower().replace(" ", ".") + "@example.com",
+        patient_phone=phone,
+        note=note,
+        ai_message="See you soon!",  # seeded bookings have no cancel_token, so they cannot be cancelled
+    )
+
+
 def main() -> None:
+    rng = random.Random(42)  # fixed seed: the same choices every run
     db = SessionLocal()
     try:
         # Empty all tables and reset the id counters.
@@ -53,43 +111,36 @@ def main() -> None:
         doctors = [Doctor(**d) for d in DOCTORS]
         # The calendar id is never committed: it only comes from the environment, and only for the first doctor.
         doctors[0].google_calendar_id = settings.demo_calendar_id or None
-        services = {s["name"]: Service(**s) for s in SERVICES}
-        db.add_all(doctors + list(services.values()))
+        services = [Service(**s) for s in SERVICES]
+        db.add_all(doctors + services)
 
-        # Seed this week and next week, so there are always future slots to book
-        # (e.g. when the seed is run on a Saturday).
-        this_monday = monday_of(datetime.now(TZ).date())
+        now = datetime.now(TZ)
+        first_day = now.date() - timedelta(days=PAST_DAYS)
+        last_day = monday_of(now.date()) + timedelta(weeks=WEEKS_AHEAD, days=5)  # the Saturday of the last week
+
         slots = []
-        for week_start in (this_monday, this_monday + timedelta(weeks=1)):
-            for doctor, schedule in zip(doctors, SCHEDULES):
-                for day_offset, start, service_name in schedule:
-                    service = services[service_name]
-                    start_at = datetime.combine(
-                        week_start + timedelta(days=day_offset),
-                        time.fromisoformat(start),
-                        tzinfo=TZ,
-                    )
+        for offset in range((last_day - first_day).days + 1):
+            day = first_day + timedelta(days=offset)
+            if day.weekday() == 6:  # the clinic is closed on Sunday
+                continue
+            end = SATURDAY_END if day.weekday() == 5 else WEEKDAY_END
+            for doctor, shift_start in zip(doctors, SHIFT_STARTS):
+                for minute, service in make_day_times(rng, services, shift_start, end):
+                    start_at = datetime.combine(day, time(minute // 60, minute % 60), tzinfo=TZ)
                     slots.append(
-                        Slot(
-                            doctor=doctor,
-                            service=service,
-                            start_at=start_at,
-                            duration_minutes=service.duration_minutes,
-                        )
+                        Slot(doctor=doctor, service=service, start_at=start_at, duration_minutes=service.duration_minutes)
                     )
         db.add_all(slots)
 
-        # Book two of next week's slots so the "booked" state is visible.
-        next_week_slots = [s for s in slots if s.start_at.date() >= this_monday + timedelta(weeks=1)]
-        db.add_all([
-            Booking(slot=next_week_slots[0], patient_name="Ivana Trajkovska",
-                    patient_email="ivana@example.com", ai_message="See you soon!"),
-            Booking(slot=next_week_slots[3], patient_name="Petar Ilievski",
-                    patient_email="petar@example.com", ai_message="See you soon!"),
-        ])
+        # About 35% of the future slots are booked, plus a few past ones.
+        future = [s for s in slots if s.start_at > now]
+        past = [s for s in slots if s.start_at <= now]
+        booked = rng.sample(future, round(len(future) * FUTURE_BOOKED_SHARE))
+        booked += rng.sample(past, min(PAST_BOOKINGS, len(past)))
+        db.add_all([make_booking(rng, slot) for slot in booked])
 
         db.commit()
-        print(f"Seeded {len(doctors)} doctors, {len(services)} services, {len(slots)} slots, 2 bookings.")
+        print(f"Seeded {len(doctors)} doctors, {len(services)} services, {len(slots)} slots, {len(booked)} bookings.")
     finally:
         db.close()
 

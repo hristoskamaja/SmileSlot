@@ -176,7 +176,7 @@ Provide `.env.example` files. **Never commit secrets or the service-account key.
 ## Phases (work one phase at a time)
 **Phase 0 — Setup.**
 - Repo structure, Docker Compose Postgres, FastAPI skeleton with `/api/health`, Vite app.
-- Alembic migration for the models, plus a seed script (3 doctors, 4 services, sample slots this week).
+- Alembic migration for the models, plus a seed script (3 doctors, 4 services). The seed is relative to today: slots Mon-Sat (none after 18:00, no overlaps) for a few past days, the current week and the next 3 weeks, about 35% of the future slots booked by fake patients (`@example.com`, some with phone or note, no `cancel_token`) plus a few past bookings. It uses a fixed random seed and is safe to run again.
 
 **Phase 1 — MUST.**
 - Endpoints for doctors, services, slots, and bookings, with validation and the unique constraint.

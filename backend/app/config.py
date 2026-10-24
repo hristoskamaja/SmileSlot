@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# A booking can be cancelled until this many hours before the appointment starts.
+CANCELLATION_HOURS = 24
+
+
 class Settings(BaseSettings):
     """App settings, read from environment variables (or backend/.env)."""
 

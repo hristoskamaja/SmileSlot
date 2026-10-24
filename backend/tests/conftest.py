@@ -37,6 +37,10 @@ def pytest_sessionstart(session):
             conn.execute(text(f"CREATE DATABASE {TEST_DB_NAME}"))
     admin_engine.dispose()
 
+    # Rebuild the tables from the models, so a test database made before a new column was
+    # added doesn't keep the old shape (create_all alone never alters existing tables).
+    # Safe: the name check above guarantees this is the disposable test database.
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 

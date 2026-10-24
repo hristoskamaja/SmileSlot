@@ -68,3 +68,10 @@ class BookingOut(BaseModel):
     note: str | None
     ai_message: str
     created_at: datetime
+
+
+class BookingCreated(BookingOut):
+    """Only the response to creating a booking. The cancel token is shown once, to the patient,
+    and must not be added to BookingOut or any other response."""
+
+    cancel_token: str

@@ -55,6 +55,9 @@ class Booking(Base):
     patient_email: Mapped[str] = mapped_column(String(255))
     note: Mapped[str | None] = mapped_column(Text)
     ai_message: Mapped[str] = mapped_column(Text)
+    # A secret that only the patient who booked knows. It is needed to cancel the booking.
+    # Nullable so bookings made before cancellation existed (e.g. the seeded ones) still work.
+    cancel_token: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     slot: Mapped[Slot] = relationship(back_populates="booking")

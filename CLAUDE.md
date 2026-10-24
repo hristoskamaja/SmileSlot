@@ -80,9 +80,11 @@ smileslot/
 - **doctors:** `id`, `name`, `specialty`, `color`, `google_calendar_id` (nullable)
 - **services:** `id`, `name`, `duration_minutes`, `description`
 - **slots:** `id`, `doctor_id` (FK), `service_id` (FK), `start_at` (timestamptz), `duration_minutes`, `created_at`
-- **bookings:** `id`, `slot_id` (FK, **UNIQUE**), `patient_name`, `patient_email`, `note` (nullable), `ai_message`, `created_at`
+- **bookings:** `id`, `slot_id` (FK, **UNIQUE**), `patient_name`, `patient_email`, `note` (nullable), `ai_message`, `cancel_token` (nullable), `created_at`
 
 The **UNIQUE constraint on `bookings.slot_id`** is the real protection against double booking. Insert the booking inside a transaction. If the insert fails on the unique constraint, return **409 Conflict**.
+
+`cancel_token` is a random secret (`secrets.token_urlsafe`) created with the booking. It is returned **only** in the response to `POST /bookings` and must never appear in any other response (slots list, Clinic view). It is nullable so bookings made before cancellation existed (e.g. the seeded ones) still work; a booking without a token can never be cancelled. The patient's browser keeps the token in localStorage.
 
 A slot's `status` is computed, not stored:
 - `booked` if a booking exists
@@ -98,7 +100,8 @@ A slot's `status` is computed, not stored:
 | GET | `/slots?doctor_id=&week_start=&service_id=` | slots for one doctor and week, each with computed `status` (+ `patient_name` when booked, for the clinic view) |
 | POST | `/slots` | create a slot. Validate: in the future, positive duration, no overlap with the same doctor's slots (422 with a clear message) |
 | DELETE | `/slots/{id}` | delete a slot; only if not booked (409 otherwise) |
-| POST | `/bookings` | book a slot. Validate name and email (Pydantic `EmailStr`). Reject past, booked, or calendar_busy slots (409). Returns the booking incl. `ai_message` (201) |
+| POST | `/bookings` | book a slot. Validate name and email (Pydantic `EmailStr`). Reject past, booked, or calendar_busy slots (409). Returns the booking incl. `ai_message` and `cancel_token` (201) |
+| DELETE | `/bookings/{id}?token=` | cancel a booking, up to 24 hours before the slot starts (`CANCELLATION_HOURS` in `config.py`). 404 if the booking does not exist; 403 if the token is missing or wrong (or the booking has none); 409 if the slot starts in less than 24 hours or is in the past. Otherwise 204, and the slot is available again |
 
 Return errors in one consistent shape: `{ "detail": "human readable message" }`.
 

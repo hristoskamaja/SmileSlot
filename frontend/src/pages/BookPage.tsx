@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { addWeeks } from 'date-fns'
 import { CalendarX, TriangleAlert } from 'lucide-react'
 import { getDoctors, getServices, getSlots } from '@/api/client'
+import BookingDialog from '@/components/BookingDialog'
 import DayList from '@/components/DayList'
 import DoctorSelect from '@/components/DoctorSelect'
 import Legend from '@/components/Legend'
@@ -12,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import WeekGrid from '@/components/WeekGrid'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
+import type { Slot } from '@/types'
 
 // Shown instead of the grid when there is nothing to show or something went wrong.
 function Message({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
@@ -28,6 +30,7 @@ function BookPage() {
   const [weekStart, setWeekStart] = useState(currentWeekStart)
   const [serviceId, setServiceId] = useState<number | null>(null)
   const [pickedDoctorId, setPickedDoctorId] = useState<number | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null) // the slot in the booking dialog
 
   const doctorsQuery = useQuery({ queryKey: ['doctors'], queryFn: getDoctors })
   const servicesQuery = useQuery({ queryKey: ['services'], queryFn: getServices })
@@ -75,10 +78,10 @@ function BookPage() {
     return (
       <>
         <div className="hidden md:block">
-          <WeekGrid days={days} slots={slotsQuery.data!} services={services!} />
+          <WeekGrid days={days} slots={slotsQuery.data!} services={services!} onSelect={setSelectedSlot} />
         </div>
         <div className="md:hidden">
-          <DayList days={days} slots={slotsQuery.data!} services={services!} />
+          <DayList days={days} slots={slotsQuery.data!} services={services!} onSelect={setSelectedSlot} />
         </div>
         <div className="mt-4">
           <Legend services={services!} />
@@ -112,6 +115,16 @@ function BookPage() {
       </div>
 
       {renderCalendar()}
+
+      {selectedSlot && doctors && services && (
+        <BookingDialog
+          key={selectedSlot.id}
+          slot={selectedSlot}
+          doctor={doctors.find((d) => d.id === selectedSlot.doctor_id)!}
+          serviceName={services.find((s) => s.id === selectedSlot.service_id)?.name ?? 'Appointment'}
+          onClose={() => setSelectedSlot(null)}
+        />
+      )}
     </div>
   )
 }

@@ -8,10 +8,11 @@ type Props = {
   days: Date[]
   slots: Slot[]
   services: Service[]
+  onSelect: (slot: Slot) => void
 }
 
 // Mobile view: one section per day, listing only the days that have slots.
-function DayList({ days, slots, services }: Props) {
+function DayList({ days, slots, services, onSelect }: Props) {
   return (
     <div className="space-y-6">
       {days.map((day) => {
@@ -23,22 +24,28 @@ function DayList({ days, slots, services }: Props) {
             <ul className="space-y-2">
               {daySlots.map((slot) => {
                 const booked = slot.status === 'booked'
+                const past = isPast(slot)
                 const serviceName = services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
                 return (
-                  <li
-                    key={slot.id}
-                    style={booked ? undefined : serviceStyle(serviceName)}
-                    className={cn(
-                      'flex items-center justify-between gap-3 rounded-lg border px-4 py-3',
-                      booked && 'booked-stripes',
-                      isPast(slot) && 'opacity-50',
-                    )}
-                  >
-                    <span className="flex items-center gap-1.5 font-semibold">
-                      {booked && <Lock className="size-4" aria-hidden />}
-                      {booked ? 'Booked' : serviceName}
-                    </span>
-                    <span className="text-sm">{formatTimeRange(slot)}</span>
+                  <li key={slot.id}>
+                    <button
+                      type="button"
+                      disabled={booked || past}
+                      onClick={() => onSelect(slot)}
+                      style={booked ? undefined : serviceStyle(serviceName)}
+                      className={cn(
+                        'flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left outline-none',
+                        'focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default',
+                        booked && 'booked-stripes',
+                        past && 'opacity-50',
+                      )}
+                    >
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        {booked && <Lock className="size-4" aria-hidden />}
+                        {booked ? 'Booked' : serviceName}
+                      </span>
+                      <span className="text-sm">{formatTimeRange(slot)}</span>
+                    </button>
                   </li>
                 )
               })}

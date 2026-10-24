@@ -152,6 +152,12 @@
   --booked-text: #747c7e;
   --booked-stripe: #d3d8da;
 
+  /* Booking summary and "A message for you" cards (design/02 and 03). */
+  --summary-bg: #c1f6e2;
+  --summary-border: #9ad6c3;
+  --message-bg: #d9faf3;
+  --message-border: #f0fdfa;
+
   /* Used by the "Doctor busy" state (Google Calendar, Phase 3). */
   --busy-bg: #eceff0;
   --busy-border: #dde7e7;

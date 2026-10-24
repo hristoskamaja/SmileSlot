@@ -26,3 +26,21 @@ export type Slot = {
   status: SlotStatus
   patient_name: string | null
 }
+
+// What the booking form sends to POST /bookings.
+export type BookingInput = {
+  slot_id: number
+  patient_name: string
+  patient_email: string
+  note?: string
+}
+
+export type Booking = {
+  id: number
+  slot_id: number
+  patient_name: string
+  patient_email: string
+  note: string | null
+  ai_message: string
+  created_at: string
+}

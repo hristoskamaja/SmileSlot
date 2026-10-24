@@ -8,12 +8,13 @@ type Props = {
   slot: Slot
   serviceName: string
   style: CSSProperties // top and height, set by the grid
+  onSelect: (slot: Slot) => void
 }
 
 // Slots shorter than this are too small to fit a second line with the time.
 const MIN_MINUTES_FOR_TIME = 45
 
-function SlotBlock({ slot, serviceName, style }: Props) {
+function SlotBlock({ slot, serviceName, style, onSelect }: Props) {
   const booked = slot.status === 'booked'
   const past = isPast(slot)
   const showTime = slot.duration_minutes >= MIN_MINUTES_FOR_TIME
@@ -21,8 +22,8 @@ function SlotBlock({ slot, serviceName, style }: Props) {
   return (
     <button
       type="button"
-      // Clicking does nothing yet; the booking dialog comes in the next step.
       disabled={booked || past}
+      onClick={() => onSelect(slot)}
       // Booked slots get their colors from the .booked-stripes class; the others from the service.
       style={{ ...style, ...(booked ? {} : serviceStyle(serviceName)) }}
       className={cn(

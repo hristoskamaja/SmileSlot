@@ -58,6 +58,16 @@ export function formatTime(iso: string): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
+// "Thu, Oct 22", in clinic time.
+export function formatSlotDate(iso: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: CLINIC_TIMEZONE,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(iso))
+}
+
 export function formatTimeRange(slot: Slot): string {
   const endIso = new Date(new Date(slot.start_at).getTime() + slot.duration_minutes * 60_000).toISOString()
   return `${formatTime(slot.start_at)} – ${formatTime(endIso)}`

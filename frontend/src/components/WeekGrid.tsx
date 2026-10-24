@@ -16,12 +16,13 @@ type Props = {
   days: Date[]
   slots: Slot[]
   services: Service[]
+  onSelect: (slot: Slot) => void
 }
 
 const HOURS = Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => DAY_START_HOUR + i)
 const GRID_COLUMNS = 'grid grid-cols-[72px_repeat(6,minmax(0,1fr))]'
 
-function WeekGrid({ days, slots, services }: Props) {
+function WeekGrid({ days, slots, services, onSelect }: Props) {
   const today = todayInClinic()
 
   return (
@@ -74,6 +75,7 @@ function WeekGrid({ days, slots, services }: Props) {
                   <SlotBlock
                     key={slot.id}
                     slot={slot}
+                    onSelect={onSelect}
                     serviceName={services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'}
                     style={{
                       top: (minutesFromDayStart(slot) / 60) * HOUR_HEIGHT,

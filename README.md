@@ -2,10 +2,20 @@
 
 A booking app for a small dental clinic: staff publish time slots for each doctor, and patients pick a doctor and a service, see the free times in a weekly calendar and book one with their name and email.
 
-- Live app: LIVE_URL_HERE
+- Live app: https://smileslot-o1bs.onrender.com (API docs: https://smileslot-api.onrender.com/docs)
 - Code: https://github.com/hristoskamaja/SmileSlot
 
-SCREENSHOTS_HERE
+![The Book page: a weekly calendar for one doctor](docs/screenshots/book.png)
+*Book page: a doctor's week, with free, booked and busy slots.*
+
+![The booking confirmation with a message for the patient](docs/screenshots/confirmation.png)
+*Confirmation after booking, with the message from Gemini.*
+
+![The Clinic page: add a slot and see the week](docs/screenshots/clinic.png)
+*Clinic page: staff add slots and see who booked.*
+
+![Dark mode with the onboarding tour](docs/screenshots/dark-mode-and-tour.png)
+*Dark mode, with step 2 of the onboarding tour.*
 
 ## What I built
 
@@ -21,7 +31,7 @@ SCREENSHOTS_HERE
 - **Weekly calendar grid**, Monday to Saturday, with a day list on small screens.
 - **"Your booking" and "My appointments".** A booking can be cancelled up to 24 hours before it starts. There is no login, so each booking gets a secret cancel token that the browser keeps.
 - **Onboarding tour** on the first visit to the Book and Clinic pages.
-- **Dark mode**, which follows the system setting until you choose.
+- **Dark mode**, off by default; it turns on only when you click the toggle, and the browser remembers it.
 - **Optional phone number.** The Clinic page opens the patient's details (email, phone, note) for a booked slot. The public slots list never contains them.
 - **Demo data relative to today**, so the calendar always has past, current and upcoming slots, some of them booked.
 
@@ -41,7 +51,7 @@ SCREENSHOTS_HERE
 - **Database:** PostgreSQL
 - **Integrations:** Gemini (`google-genai`), Google Calendar API
 - **Tests:** pytest, Vitest + React Testing Library
-- **Hosting:** HOSTING_TO_CONFIRM (everything on Render: Static Site for the frontend, Web Service for the backend, Render Postgres for the database)
+- **Hosting:** everything on Render (Postgres database, Web Service for the backend, Static Site for the frontend)
 
 ## Run it locally
 You need Node, Python 3.12 and Docker. Commands are for Windows PowerShell; the macOS/Linux difference is in the comment.
@@ -93,6 +103,11 @@ cd frontend
 npm test
 ```
 
+## Live demo notes
+- The free Render backend sleeps after inactivity, so the first request can take up to about a minute.
+- The free Render Postgres database expires 30 days after it was created (October 24, 2026), so around November 23, 2026.
+- The demo data uses fake patients.
+
 ## AI tools I used and how
 - **Claude (chat)** to plan the scope, the data model and the prompts.
 - **Lovable** only to design the look. The screenshots are in `design/`, and there is no Lovable code in the project.
@@ -110,3 +125,4 @@ One example of debugging with logs: two problems came up with the Gemini calls. 
 4. Add a database rule against overlapping slots, because only the code checks that now.
 5. Send the confirmation in the background, so a booking does not wait for Gemini.
 6. Email or SMS reminders.
+7. Disable the times that are already taken in the add-slot form, instead of rejecting them after submit.

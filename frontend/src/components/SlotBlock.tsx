@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Lock } from 'lucide-react'
-import { formatTimeRange, isPast, serviceColor } from '@/lib/slots'
+import { formatTimeRange, isPast, serviceStyle } from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Slot } from '@/types'
 
@@ -23,11 +23,12 @@ function SlotBlock({ slot, serviceName, style }: Props) {
       type="button"
       // Clicking does nothing yet; the booking dialog comes in the next step.
       disabled={booked || past}
-      style={style}
+      // Booked slots get their colors from the .booked-stripes class; the others from the service.
+      style={{ ...style, ...(booked ? {} : serviceStyle(serviceName)) }}
       className={cn(
         'absolute inset-x-2 flex flex-col justify-start overflow-hidden rounded-lg border px-3 py-1 text-left text-sm outline-none',
         'focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default',
-        booked ? 'booked-stripes border-border text-muted-foreground' : serviceColor(serviceName),
+        booked && 'booked-stripes',
         past && 'opacity-50',
       )}
     >

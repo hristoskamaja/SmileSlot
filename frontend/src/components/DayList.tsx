@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { Lock } from 'lucide-react'
-import { dayKey, formatTimeRange, isPast, serviceColor, slotDay } from '@/lib/slots'
+import { dayKey, formatTimeRange, isPast, serviceStyle, slotDay } from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Service, Slot } from '@/types'
 
@@ -27,9 +27,10 @@ function DayList({ days, slots, services }: Props) {
                 return (
                   <li
                     key={slot.id}
+                    style={booked ? undefined : serviceStyle(serviceName)}
                     className={cn(
                       'flex items-center justify-between gap-3 rounded-lg border px-4 py-3',
-                      booked ? 'booked-stripes text-muted-foreground' : serviceColor(serviceName),
+                      booked && 'booked-stripes',
                       isPast(slot) && 'opacity-50',
                     )}
                   >

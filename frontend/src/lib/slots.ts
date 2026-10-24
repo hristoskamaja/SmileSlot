@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { addDays, format, startOfWeek } from 'date-fns'
 import type { Slot } from '@/types'
 
@@ -8,17 +9,24 @@ export const DAY_START_HOUR = 8
 export const DAY_END_HOUR = 18
 export const HOUR_HEIGHT = 80 // pixels per hour in the weekly grid
 
-// Tailwind needs complete class names in the source, so each service gets its full set here.
-const SERVICE_COLORS: Record<string, string> = {
-  'Check-up': 'bg-sky-100 border-sky-300 text-sky-900',
-  Cleaning: 'bg-emerald-100 border-emerald-300 text-emerald-900',
-  Filling: 'bg-orange-100 border-orange-300 text-orange-900',
-  Whitening: 'bg-fuchsia-100 border-fuchsia-300 text-fuchsia-900',
+// The colors live in index.css as CSS variables, e.g. --service-checkup-bg.
+// This maps a service name to the part of the variable name after "--service-".
+const SERVICE_KEYS: Record<string, string> = {
+  'Check-up': 'checkup',
+  Cleaning: 'cleaning',
+  Filling: 'filling',
+  Whitening: 'whitening',
 }
-const DEFAULT_COLOR = 'bg-slate-100 border-slate-300 text-slate-900'
 
-export function serviceColor(serviceName: string): string {
-  return SERVICE_COLORS[serviceName] ?? DEFAULT_COLOR
+// Slot blocks and the legend both call this, so they always share the same colors.
+export function serviceStyle(serviceName: string): CSSProperties {
+  const key = SERVICE_KEYS[serviceName]
+  if (!key) return { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1', color: '#0f172a' } // unknown service
+  return {
+    backgroundColor: `var(--service-${key}-bg)`,
+    borderColor: `var(--service-${key}-border)`,
+    color: `var(--service-${key}-text)`,
+  }
 }
 
 // Splits a timestamp into its clinic-time parts, e.g. { date: "2026-10-19", hour: 8, minute: 30 }.

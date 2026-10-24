@@ -129,12 +129,43 @@
     }
 }
 
+/* Slot colors, sampled from the design (design/01-book.png). Used by lib/slots.ts and the legend. */
+:root {
+  --service-checkup-bg: #c7efff;
+  --service-checkup-border: #9fd0e5;
+  --service-checkup-text: #00537e;
+
+  --service-cleaning-bg: #c1f6e2;
+  --service-cleaning-border: #9ad6c3;
+  --service-cleaning-text: #005745;
+
+  --service-filling-bg: #ffe6bf;
+  --service-filling-border: #e7c89e;
+  --service-filling-text: #864e18;
+
+  --service-whitening-bg: #fcdcf8;
+  --service-whitening-border: #e3bbdb;
+  --service-whitening-text: #7f366a;
+
+  --booked-bg: #eceff0;
+  --booked-border: #dde7e7;
+  --booked-text: #747c7e;
+  --booked-stripe: #d3d8da;
+
+  /* Used by the "Doctor busy" state (Google Calendar, Phase 3). */
+  --busy-bg: #eceff0;
+  --busy-border: #dde7e7;
+  --busy-text: #747c7e;
+}
+
 /* Grey diagonal stripes for booked slots. */
 .booked-stripes {
-  background-color: oklch(0.96 0.003 220);
+  background-color: var(--booked-bg);
   background-image: repeating-linear-gradient(
     135deg,
-    transparent 0 6px,
-    oklch(0.85 0.005 220 / 60%) 6px 7px
+    transparent 0 8.5px,
+    var(--booked-stripe) 8.5px 10px
   );
+  border-color: var(--booked-border);
+  color: var(--booked-text);
 }

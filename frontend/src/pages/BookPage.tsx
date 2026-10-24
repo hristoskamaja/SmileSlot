@@ -81,7 +81,7 @@ function BookPage() {
           <DayList days={days} slots={slotsQuery.data!} services={services!} />
         </div>
         <div className="mt-4">
-          <Legend />
+          <Legend services={services!} />
         </div>
       </>
     )

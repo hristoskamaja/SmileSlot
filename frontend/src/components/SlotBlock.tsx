@@ -1,6 +1,15 @@
 import type { CSSProperties } from 'react'
 import { Calendar, CircleCheck, Lock, Trash2 } from 'lucide-react'
-import { BUSY_TOOLTIP, busyStyle, formatTime, formatTimeRange, isPast, serviceStyle, slotTitle } from '@/lib/slots'
+import {
+  busyStyle,
+  formatTime,
+  formatTimeRange,
+  isPast,
+  serviceStyle,
+  shortSlotTitle,
+  slotTitle,
+  slotTooltip,
+} from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Slot } from '@/types'
 
@@ -13,14 +22,14 @@ type Props = {
   onSelect: (slot: Slot) => void
 }
 
-// Slots shorter than this are too small to fit a second line with the time.
-const MIN_MINUTES_FOR_TIME = 45
+// Slots shorter than this are too small for two lines. They show "Title · 09:00" on one line instead.
+const MIN_MINUTES_FOR_TWO_LINES = 40
 
 function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
   const booked = slot.status === 'booked'
   const busy = slot.status === 'calendar_busy'
   const past = isPast(slot)
-  const showTime = slot.duration_minutes >= MIN_MINUTES_FOR_TIME
+  const twoLines = slot.duration_minutes >= MIN_MINUTES_FOR_TWO_LINES
   const clinic = mode === 'clinic'
   const canDelete = clinic && !booked && !past
   // Patients cannot click booked or busy slots. In the clinic they stay clickable: a booked slot opens
@@ -38,7 +47,7 @@ function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
       type="button"
       disabled={disabled}
       onClick={() => onSelect(slot)}
-      title={busy ? BUSY_TOOLTIP : undefined}
+      title={slotTooltip(slot, serviceName, clinic)}
       aria-label={
         canDelete
           ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}`
@@ -50,8 +59,10 @@ function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
       // variables; the others from the service.
       style={{ ...style, ...(booked ? {} : busy ? busyStyle : serviceStyle(serviceName)) }}
       className={cn(
-        'absolute inset-x-2 flex flex-col justify-start overflow-hidden rounded-lg border px-3 py-1 text-left text-sm outline-none',
+        'absolute inset-x-2 flex flex-col overflow-hidden rounded-lg border text-left text-sm outline-none',
         'focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default',
+        // A short block has no room for vertical padding, and less on the sides so its label fits.
+        twoLines ? 'justify-start px-3 py-1' : 'justify-center px-2',
         booked && (mine ? 'my-booking' : 'booked-stripes'),
         past && 'opacity-50',
       )}
@@ -59,10 +70,12 @@ function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
       <span className="flex items-center gap-1.5 font-semibold">
         {booked && <BookedIcon className="size-3.5 shrink-0" aria-hidden />}
         {busy && <Calendar className="size-3.5 shrink-0" aria-hidden />}
-        <span className="truncate">{title}</span>
+        <span className="truncate">
+          {twoLines ? title : `${shortSlotTitle(slot, serviceName, clinic, mine)} · ${formatTime(slot.start_at)}`}
+        </span>
         {canDelete && <Trash2 className="ml-auto size-3.5 shrink-0 opacity-60" aria-hidden />}
       </span>
-      {showTime && <span className="truncate text-sm opacity-70">{timeLine}</span>}
+      {twoLines && <span className="truncate text-sm opacity-70">{timeLine}</span>}
     </button>
   )
 }

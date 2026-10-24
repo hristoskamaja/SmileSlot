@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
 import { hasSeenTour, startTour } from '@/lib/tour'
+import { useDefaultWeek } from '@/lib/useDefaultWeek'
 import type { Slot } from '@/types'
 
 function ClinicPage() {
@@ -33,6 +34,8 @@ function ClinicPage() {
     queryFn: () => getSlots(doctorId!, dayKey(weekStart)),
     enabled: doctorId !== undefined,
   })
+
+  useDefaultWeek(weekStart, setWeekStart, slotsQuery.data)
 
   // Show the tour on the first visit.
   useEffect(() => {

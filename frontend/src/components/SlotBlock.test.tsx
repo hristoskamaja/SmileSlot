@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SlotBlock from '@/components/SlotBlock'
@@ -48,18 +48,40 @@ describe('SlotBlock in the Book page', () => {
   })
 
   it('shows my own booking as "Your booking"', () => {
-    const { button } = renderBlock(makeSlot({ status: 'booked' }), { mine: true })
+    const { button } = renderBlock(makeSlot({ status: 'booked', duration_minutes: 60 }), { mine: true })
 
     expect(button).toHaveTextContent('Your booking')
     expect(button).toBeDisabled()
   })
 
   it('shows a busy slot as "Doctor busy", with a tooltip, not clickable', () => {
-    const { button } = renderBlock(makeSlot({ status: 'calendar_busy' }))
+    const { button } = renderBlock(makeSlot({ status: 'calendar_busy', duration_minutes: 60 }))
 
     expect(button).toHaveTextContent('Doctor busy')
-    expect(button).toHaveAttribute('title', 'Doctor is busy (Google Calendar)')
+    expect(button).toHaveAttribute('title', 'Cleaning · 10:00 – 11:00 · Doctor is busy (Google Calendar)')
     expect(button).toBeDisabled()
+  })
+
+  it('uses short labels in short blocks, so they fit: "Busy" and "Yours"', () => {
+    const busy = renderBlock(makeSlot({ status: 'calendar_busy', duration_minutes: 30 }))
+    expect(busy.button).toHaveTextContent('Busy · 10:00')
+    expect(busy.button).toHaveAttribute('title', 'Cleaning · 10:00 – 10:30 · Doctor is busy (Google Calendar)')
+    cleanup()
+
+    const mine = renderBlock(makeSlot({ status: 'booked', duration_minutes: 30 }), { mine: true })
+    expect(mine.button).toHaveTextContent('Yours · 10:00')
+  })
+
+  it('shows a short slot on one line with its start time, and a long one on two lines', () => {
+    const short = renderBlock(makeSlot({ duration_minutes: 20 }))
+    expect(short.button).toHaveTextContent('Cleaning · 10:00')
+    expect(short.button).toHaveAttribute('title', 'Cleaning · 10:00 – 10:20')
+    cleanup()
+
+    const long = renderBlock(makeSlot({ duration_minutes: 60 }))
+    expect(long.button).toHaveTextContent('Cleaning')
+    expect(long.button).toHaveTextContent('10:00 – 11:00')
+    expect(long.button).not.toHaveTextContent('Cleaning · 10:00')
   })
 
   it('dims a slot in the past and does not let anyone click it', () => {

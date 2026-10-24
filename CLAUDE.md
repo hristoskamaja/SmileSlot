@@ -133,6 +133,9 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
    - Toolbar with doctor selector, service filter chips, and week navigation (prev / Today / next).
    - Weekly grid: Mon–Sat, 08:00–18:00. Slot blocks are positioned by time, sized by duration, and colored by service.
    - States: available (clickable), booked (striped, "Booked"), calendar_busy (grey + calendar icon), past (dimmed).
+   - The grid has a fixed height (760px, whatever the window size; the page scrolls below it), faint dashed lines at the half hours, and scrolls to the week's earliest slot when a week loads. Every block has a tooltip (service and time range; the Clinic also sees the patient's name). A block under 40 minutes shows "Label · 09:00" on one line, with a short label so it is not cut off: "Busy", "Yours", the patient's first name in the Clinic.
+   - A thin teal "current time" line with a dot crosses today's column, above the slots but not blocking clicks. It shows only when the shown week is the current week and the clinic time is between 08:00 and 18:00, and it moves every minute (timer cleared on unmount).
+   - Default week (both pages, clinic time): the current week, except on a Sunday or when the current week has no future slots; then next week. "Today" always goes to the current week.
    - A legend under the grid.
    - Below 768px width, show a list grouped by day instead of the grid.
 2. **Booking dialog:**

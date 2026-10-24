@@ -1,7 +1,6 @@
 import { format } from 'date-fns'
 import { Calendar, CircleCheck, Lock, Trash2 } from 'lucide-react'
 import {
-  BUSY_TOOLTIP,
   busyStyle,
   dayKey,
   formatTime,
@@ -11,6 +10,7 @@ import {
   serviceStyle,
   slotDay,
   slotTitle,
+  slotTooltip,
 } from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Service, Slot } from '@/types'
@@ -59,7 +59,7 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
                       type="button"
                       disabled={disabled}
                       onClick={() => onSelect(slot)}
-                      title={busy ? BUSY_TOOLTIP : undefined}
+                      title={slotTooltip(slot, serviceName, clinic)}
                       aria-label={
                         canDelete
                           ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}`

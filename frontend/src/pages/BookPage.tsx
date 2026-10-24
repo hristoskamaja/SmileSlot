@@ -11,6 +11,7 @@ import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
 import { isMyBooking, useMyBookings } from '@/lib/myBookings'
 import { hasSeenTour, startTour } from '@/lib/tour'
+import { useDefaultWeek } from '@/lib/useDefaultWeek'
 import type { Slot } from '@/types'
 
 function BookPage() {
@@ -34,6 +35,8 @@ function BookPage() {
     queryFn: () => getSlots(doctorId!, dayKey(weekStart), serviceId ?? undefined),
     enabled: doctorId !== undefined, // wait until the doctors have loaded
   })
+
+  useDefaultWeek(weekStart, setWeekStart, slotsQuery.data)
 
   // Show the tour on the first visit.
   useEffect(() => {

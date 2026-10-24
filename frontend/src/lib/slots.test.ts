@@ -10,8 +10,12 @@ import {
   isPast,
   isPastDay,
   minutesFromDayStart,
+  nowLinePosition,
+  shortSlotTitle,
+  shouldStartNextWeek,
   slotDay,
   slotTitle,
+  slotTooltip,
   todayInClinic,
   weekDays,
 } from '@/lib/slots'
@@ -92,6 +96,101 @@ describe('past and weeks', () => {
   it('formats the week range, also across two months', () => {
     expect(formatWeekRange(new Date(2026, 6, 13))).toBe('Jul 13 – 18, 2026')
     expect(formatWeekRange(new Date(2026, 5, 29))).toBe('Jun 29 – Jul 4, 2026')
+  })
+})
+
+describe('the "current time" line', () => {
+  it('has no position before 08:00 or from 18:00 on', () => {
+    expect(nowLinePosition(new Date('2026-07-15T05:59:00Z'))).toBeNull() // 07:59 in Skopje
+    expect(nowLinePosition(new Date('2026-07-15T16:00:00Z'))).toBeNull() // 18:00
+    expect(nowLinePosition(new Date('2026-07-15T20:00:00Z'))).toBeNull() // 22:00
+  })
+
+  it('counts minutes from the top of the grid, on the hour and in between', () => {
+    expect(nowLinePosition(new Date('2026-07-15T06:00:00Z'))).toBe(0) // 08:00, the first moment shown
+    expect(nowLinePosition(new Date('2026-07-15T08:00:00Z'))).toBe(120) // 10:00
+    expect(nowLinePosition(new Date('2026-07-15T08:37:00Z'))).toBe(157) // 10:37
+    expect(nowLinePosition(new Date('2026-07-15T15:59:00Z'))).toBe(599) // 17:59, the last minute shown
+  })
+
+  it('is the same for a slot and for "now", so the line lines up with the blocks', () => {
+    const slot = makeSlot({ start_at: '2026-07-15T08:37:00Z' })
+    expect(nowLinePosition(new Date(slot.start_at))).toBe(minutesFromDayStart(slot))
+  })
+
+  it('stays right on both sides of the daylight saving changes', () => {
+    // The clocks go back on 25 Oct 2026 (03:00 -> 02:00): 10:00 is 08:00 UTC before, 09:00 UTC after.
+    expect(nowLinePosition(new Date('2026-10-24T08:00:00Z'))).toBe(120)
+    expect(nowLinePosition(new Date('2026-10-25T09:00:00Z'))).toBe(120)
+    // And forward on 29 Mar 2026 (02:00 -> 03:00): 10:00 is 09:00 UTC before, 08:00 UTC after.
+    expect(nowLinePosition(new Date('2026-03-28T09:00:00Z'))).toBe(120)
+    expect(nowLinePosition(new Date('2026-03-29T08:00:00Z'))).toBe(120)
+  })
+})
+
+describe('which week to open first', () => {
+  const future = makeSlot({ start_at: '2026-07-16T08:00:00Z' })
+  const past = makeSlot({ start_at: '2026-07-14T08:00:00Z' })
+
+  it('stays on this week when it still has a future slot', () => {
+    expect(shouldStartNextWeek([past, future])).toBe(false)
+  })
+
+  it('moves to next week when this week has only past slots, or none', () => {
+    expect(shouldStartNextWeek([past])).toBe(true)
+    expect(shouldStartNextWeek([])).toBe(true)
+  })
+
+  it('moves to next week on a Sunday, even if this week has a future slot', () => {
+    vi.setSystemTime(new Date('2026-07-19T10:00:00Z'))
+    expect(shouldStartNextWeek([makeSlot({ start_at: '2026-07-20T08:00:00Z' })])).toBe(true)
+  })
+
+  it('uses clinic time for Sunday: late Saturday in UTC is already Sunday in Skopje', () => {
+    vi.setSystemTime(new Date('2026-07-18T22:30:00Z')) // 00:30 on Sunday in Skopje
+    expect(shouldStartNextWeek([makeSlot({ start_at: '2026-07-20T08:00:00Z' })])).toBe(true)
+
+    vi.setSystemTime(new Date('2026-07-18T12:00:00Z')) // still Saturday afternoon in Skopje
+    expect(shouldStartNextWeek([makeSlot({ start_at: '2026-07-20T08:00:00Z' })])).toBe(false)
+  })
+})
+
+describe('shortSlotTitle (for blocks too short for two lines)', () => {
+  const title = (overrides: Parameters<typeof makeSlot>[0], clinic = false, mine = false) =>
+    shortSlotTitle(makeSlot(overrides), 'Cleaning', clinic, mine)
+
+  it('keeps the service name and "Booked", which are short already', () => {
+    expect(title({})).toBe('Cleaning')
+    expect(title({ status: 'booked', patient_name: 'Ana Petrova' })).toBe('Booked')
+  })
+
+  it('shortens "Doctor busy" to "Busy" and "Your booking" to "Yours"', () => {
+    expect(title({ status: 'calendar_busy' })).toBe('Busy')
+    expect(title({ status: 'booked' }, false, true)).toBe('Yours')
+  })
+
+  it('shows only the first name of the patient in the clinic', () => {
+    expect(title({ status: 'booked', patient_name: 'Ivana Trajkovska' }, true)).toBe('Ivana')
+    expect(title({ status: 'booked', patient_name: null }, true)).toBe('Booked')
+  })
+})
+
+describe('slotTooltip', () => {
+  const slot = makeSlot({ start_at: SUMMER, duration_minutes: 45 })
+
+  it('has the service and the full time range', () => {
+    expect(slotTooltip(slot, 'Cleaning', false)).toBe('Cleaning · 08:30 – 09:15')
+  })
+
+  it('adds the full patient name for the clinic, but never for the public', () => {
+    const booked = { ...slot, status: 'booked' as const, patient_name: 'Ana Petrova' }
+    expect(slotTooltip(booked, 'Cleaning', true)).toBe('Ana Petrova · Cleaning · 08:30 – 09:15')
+    expect(slotTooltip(booked, 'Cleaning', false)).toBe('Cleaning · 08:30 – 09:15')
+  })
+
+  it('says why a busy slot cannot be booked', () => {
+    const busy = { ...slot, status: 'calendar_busy' as const }
+    expect(slotTooltip(busy, 'Cleaning', false)).toBe('Cleaning · 08:30 – 09:15 · Doctor is busy (Google Calendar)')
   })
 })
 

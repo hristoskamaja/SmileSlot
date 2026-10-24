@@ -1,5 +1,6 @@
-import { CircleHelp, Smile } from 'lucide-react'
+import { CircleHelp } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
+import logo from '@/assets/logo.svg'
 import { Button } from '@/components/ui/button'
 import { startTour, tourForPath } from '@/lib/tour'
 import { cn } from '@/lib/utils'
@@ -24,9 +25,8 @@ function Header() {
     <header className="border-b bg-card">
       <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-6 px-4 sm:px-6">
         <div className="flex items-center gap-2.5">
-          <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Smile className="size-6" aria-hidden />
-          </span>
+          {/* Decorative: the app name right next to it says the same thing. */}
+          <img src={logo} alt="" className="size-10" />
           <span className="text-xl font-bold tracking-tight">
             Smile<span className="text-primary">Slot</span>
           </span>

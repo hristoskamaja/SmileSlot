@@ -70,3 +70,40 @@ def test_invalid_email_returns_422(client, make_slot):
 
 def test_booking_a_missing_slot_returns_404(client):
     assert book(client, 999).status_code == 404
+
+
+def test_ai_message_is_stored_when_gemini_works(client, make_slot, monkeypatch):
+    message = "Hi Ana!\n- Arrive 10 minutes early"
+    monkeypatch.setattr(
+        "app.routers.bookings.generate_confirmation",
+        lambda patient_name, doctor_name, service_name, when: message,
+    )
+
+    response = book(client, make_slot()["id"])
+
+    assert response.status_code == 201
+    assert response.json()["ai_message"] == message
+
+
+def test_booking_still_works_when_the_ai_fails(client, make_slot, monkeypatch):
+    def broken_ai(*args, **kwargs):
+        raise TimeoutError("Gemini is too slow")
+
+    monkeypatch.setattr("app.routers.bookings.generate_confirmation", broken_ai)
+
+    response = book(client, make_slot()["id"])
+
+    assert response.status_code == 201
+    assert "is confirmed for" in response.json()["ai_message"]  # the template text
+
+
+def test_ai_is_not_called_for_a_booked_slot(client, make_slot, monkeypatch):
+    slot = make_slot()
+    book(client, slot["id"])
+    calls = []
+    monkeypatch.setattr("app.routers.bookings.generate_confirmation", lambda *args: calls.append(1) or "x")
+
+    second = book(client, slot["id"], email="boris@example.com")
+
+    assert second.status_code == 409
+    assert calls == []

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Comma-separated list, e.g. "http://localhost:5173,https://smileslot.vercel.app"
     cors_origins: str = "http://localhost:5173"
     timezone: str = "Europe/Skopje"
+    # Empty key = AI is off and bookings use the template message.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.5-flash-lite"
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -42,6 +42,9 @@ They evaluate with **~2 hours of work** in mind: "a focused, working app is bett
    - It generates a short, friendly confirmation message plus 2–3 practical preparation tips for the chosen service.
    - **No medical diagnosis or medical advice.**
    - If Gemini fails, times out, or returns 429, use a template fallback message. **Booking must never fail because of AI.**
+   - How it works: `services/ai.py` has `generate_confirmation(patient_name, doctor_name, service_name, when)`, with a 12-second timeout (Gemini rejects deadlines under 10 seconds). It **raises** on any problem (no key, error, timeout, 429, empty text). The single fallback is in `routers/bookings.py` (`get_confirmation_message`): it catches everything, logs a short warning (for Gemini errors the status code and message, otherwise the error type; never the key or the prompt), and uses the template.
+   - It is called only after the 404/409 checks pass and before the insert. The patient name is truncated and passed as data; the booking `note` is never sent to Gemini.
+   - Tests stub the AI (autouse fixture in `conftest.py`), so no test touches the network.
 2. **Google Calendar:** slots that clash with a doctor's existing Google Calendar events are marked `calendar_busy`. They are shown greyed out, not hidden, and cannot be booked.
    - Use a **service account**. Each doctor's calendar is shared with the service account email, and each doctor has a nullable `google_calendar_id`.
    - Use **FreeBusy.query** for the visible week.
@@ -153,7 +156,7 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
 - `DATABASE_URL`
 - `CORS_ORIGINS`
 - `GEMINI_API_KEY`
-- `GEMINI_MODEL` (a Flash model available on the AI Studio free tier)
+- `GEMINI_MODEL` (default `gemini-3.5-flash-lite`, a Flash model on the AI Studio free tier)
 - `GOOGLE_SERVICE_ACCOUNT_JSON` (optional)
 - `TIMEZONE=Europe/Skopje`
 

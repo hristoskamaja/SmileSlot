@@ -51,6 +51,16 @@ def clean_tables():
         conn.execute(text("TRUNCATE bookings, slots, services, doctors RESTART IDENTITY CASCADE"))
 
 
+@pytest.fixture(autouse=True)
+def no_real_ai(monkeypatch):
+    """Tests never call Gemini: by default the AI is 'off', so bookings use the template message."""
+
+    def ai_off(*args, **kwargs):
+        raise RuntimeError("AI disabled in tests")
+
+    monkeypatch.setattr("app.routers.bookings.generate_confirmation", ai_off)
+
+
 @pytest.fixture
 def client():
     return TestClient(app)

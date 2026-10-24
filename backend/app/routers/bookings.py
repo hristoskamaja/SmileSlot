@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import CANCELLATION_HOURS, settings
 from app.db import get_db
 from app.models import Booking, Slot
+from app.routers.slots import busy_intervals_or_empty, clashes_with
 from app.schemas import BookingCreate, BookingCreated
 from app.services.ai import generate_confirmation
 
@@ -57,6 +58,12 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
     # Friendly early check. It is NOT what prevents double booking (see IntegrityError below).
     if slot.booking:
         raise HTTPException(409, SLOT_TAKEN)
+
+    # Ask Google Calendar about just this slot's time range. If the calendar is not available this is [].
+    slot_end = slot.start_at + timedelta(minutes=slot.duration_minutes)
+    busy = busy_intervals_or_empty(slot.doctor, slot.start_at, slot_end)
+    if clashes_with(slot, busy):
+        raise HTTPException(409, "The doctor is busy at this time")
 
     # Only now, after the 404/409 checks, so we don't spend a Gemini call on a request that will fail.
     ai_message = get_confirmation_message(slot, data.patient_name)

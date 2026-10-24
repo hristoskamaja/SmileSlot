@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     # Empty key = AI is off and bookings use the template message.
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
+    # Empty = Google Calendar is off. Either the service-account JSON itself (starts with "{") or a path to the file.
+    google_service_account_json: str = ""
+    # Only used by the seed: the calendar id for the first demo doctor. Empty = none.
+    demo_calendar_id: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

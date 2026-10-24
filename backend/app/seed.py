@@ -51,6 +51,8 @@ def main() -> None:
         db.execute(text("TRUNCATE bookings, slots, services, doctors RESTART IDENTITY CASCADE"))
 
         doctors = [Doctor(**d) for d in DOCTORS]
+        # The calendar id is never committed: it only comes from the environment, and only for the first doctor.
+        doctors[0].google_calendar_id = settings.demo_calendar_id or None
         services = {s["name"]: Service(**s) for s in SERVICES}
         db.add_all(doctors + list(services.values()))
 

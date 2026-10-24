@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -9,21 +10,51 @@ from app.config import settings
 from app.db import get_db
 from app.models import Doctor, Service, Slot
 from app.schemas import SlotCreate, SlotOut
+from app.services.calendar import get_busy_intervals
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 TZ = ZoneInfo(settings.timezone)
 
+Interval = tuple[datetime, datetime]
 
-def to_slot_out(slot: Slot) -> SlotOut:
+
+def busy_intervals_or_empty(doctor: Doctor, start: datetime, end: datetime) -> list[Interval]:
+    """The doctor's busy times from Google Calendar, or [] if that is not available.
+    Never raises: a calendar problem must not break the slots list or a booking."""
+    if not doctor.google_calendar_id or not settings.google_service_account_json:
+        return []  # not set up: carry on as if there were no calendar
+    try:
+        return get_busy_intervals(doctor.google_calendar_id, start, end)
+    except Exception as error:
+        # Only the error type: the message could contain details we don't want in logs.
+        logger.warning("Google Calendar check failed (%s), ignoring the calendar", type(error).__name__)
+        return []
+
+
+def clashes_with(slot: Slot, busy: list[Interval]) -> bool:
+    """Two time ranges overlap when each one starts before the other ends.
+    Touching ranges (one ends exactly when the other starts) do not overlap."""
+    slot_end = slot.start_at + timedelta(minutes=slot.duration_minutes)
+    return any(slot.start_at < busy_end and slot_end > busy_start for busy_start, busy_end in busy)
+
+
+def to_slot_out(slot: Slot, busy: list[Interval]) -> SlotOut:
     booking = slot.booking
+    if booking:  # a booking always wins over the calendar
+        status = "booked"
+    elif clashes_with(slot, busy):
+        status = "calendar_busy"
+    else:
+        status = "available"
     return SlotOut(
         id=slot.id,
         doctor_id=slot.doctor_id,
         service_id=slot.service_id,
         start_at=slot.start_at,
         duration_minutes=slot.duration_minutes,
-        status="booked" if booking else "available",
+        status=status,
         patient_name=booking.patient_name if booking else None,
     )
 
@@ -50,7 +81,13 @@ def list_slots(
     if service_id is not None:
         query = query.where(Slot.service_id == service_id)
 
-    return [to_slot_out(slot) for slot in db.scalars(query).unique()]
+    slots = list(db.scalars(query).unique())
+
+    # ONE Google Calendar call for the whole week (not one per slot).
+    doctor = db.get(Doctor, doctor_id)
+    busy = busy_intervals_or_empty(doctor, start, end) if doctor else []
+
+    return [to_slot_out(slot, busy) for slot in slots]
 
 
 @router.post("/slots", response_model=SlotOut, status_code=201)
@@ -90,7 +127,7 @@ def create_slot(data: SlotCreate, db: Session = Depends(get_db)):
     db.add(slot)
     db.commit()
     db.refresh(slot)
-    return to_slot_out(slot)
+    return to_slot_out(slot, [])  # a new slot has no booking; the calendar is not checked here
 
 
 @router.delete("/slots/{slot_id}", status_code=204)

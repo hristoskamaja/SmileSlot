@@ -20,6 +20,14 @@ function Legend({ services, showMyBooking = false }: Props) {
         <span className="booked-stripes size-4 rounded border" aria-hidden />
         Booked
       </li>
+      <li className="flex items-center gap-2">
+        <span
+          className="size-4 rounded border"
+          style={{ backgroundColor: 'var(--busy-bg)', borderColor: 'var(--busy-border)' }}
+          aria-hidden
+        />
+        Doctor busy
+      </li>
       {showMyBooking && (
         <li className="flex items-center gap-2">
           <span className="my-booking size-4 rounded border" aria-hidden />

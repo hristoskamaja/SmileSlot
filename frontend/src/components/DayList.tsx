@@ -1,6 +1,17 @@
 import { format } from 'date-fns'
-import { CircleCheck, Lock, Trash2 } from 'lucide-react'
-import { dayKey, formatTime, formatTimeRange, isPast, isPastDay, serviceStyle, slotDay, slotTitle } from '@/lib/slots'
+import { Calendar, CircleCheck, Lock, Trash2 } from 'lucide-react'
+import {
+  BUSY_TOOLTIP,
+  busyStyle,
+  dayKey,
+  formatTime,
+  formatTimeRange,
+  isPast,
+  isPastDay,
+  serviceStyle,
+  slotDay,
+  slotTitle,
+} from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Service, Slot } from '@/types'
 
@@ -30,9 +41,12 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
             <ul className="space-y-2">
               {daySlots.map((slot) => {
                 const booked = slot.status === 'booked'
+                const busy = slot.status === 'calendar_busy'
                 const mine = isMine?.(slot) ?? false
                 const past = isPast(slot)
                 const canDelete = clinic && !booked && !past
+                // Patients cannot book a busy slot; in the clinic it stays clickable so staff can delete it.
+                const disabled = booked || past || (busy && !clinic)
                 const serviceName = services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
                 const title = slotTitle(slot, serviceName, clinic, mine)
                 const timeLine = clinic && booked ? `${serviceName} · ${formatTimeRange(slot)}` : formatTimeRange(slot)
@@ -41,10 +55,11 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
                   <li key={slot.id}>
                     <button
                       type="button"
-                      disabled={booked || past}
+                      disabled={disabled}
                       onClick={() => onSelect(slot)}
+                      title={busy ? BUSY_TOOLTIP : undefined}
                       aria-label={canDelete ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}` : undefined}
-                      style={booked ? undefined : serviceStyle(serviceName)}
+                      style={booked ? undefined : busy ? busyStyle : serviceStyle(serviceName)}
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left outline-none',
                         'focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default',
@@ -54,6 +69,7 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
                     >
                       <span className="flex items-center gap-1.5 font-semibold">
                         {booked && <BookedIcon className="size-4" aria-hidden />}
+                        {busy && <Calendar className="size-4" aria-hidden />}
                         {title}
                       </span>
                       <span className="flex items-center gap-2 text-sm">

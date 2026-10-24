@@ -29,6 +29,15 @@ export function serviceStyle(serviceName: string): CSSProperties {
   }
 }
 
+// Colors of a slot where the doctor is busy in Google Calendar (variables from index.css).
+export const busyStyle: CSSProperties = {
+  backgroundColor: 'var(--busy-bg)',
+  borderColor: 'var(--busy-border)',
+  color: 'var(--busy-text)',
+}
+
+export const BUSY_TOOLTIP = 'Doctor is busy (Google Calendar)'
+
 // Splits a timestamp into its clinic-time parts, e.g. { date: "2026-10-19", hour: 8, minute: 30 }.
 function clinicParts(iso: string) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -81,6 +90,7 @@ export function isPastDay(day: Date): boolean {
 // The main text of a slot block: the service, or who booked it.
 export function slotTitle(slot: Slot, serviceName: string, clinic: boolean, mine: boolean): string {
   if (mine) return 'Your booking'
+  if (slot.status === 'calendar_busy') return 'Doctor busy'
   if (slot.status !== 'booked') return serviceName
   return clinic ? (slot.patient_name ?? 'Booked') : 'Booked'
 }

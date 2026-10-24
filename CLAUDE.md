@@ -49,7 +49,11 @@ They evaluate with **~2 hours of work** in mind: "a focused, working app is bett
    - Use a **service account**. Each doctor's calendar is shared with the service account email, and each doctor has a nullable `google_calendar_id`.
    - Use **FreeBusy.query** for the visible week.
    - If not configured or the call fails, skip the check gracefully.
-   - **This is the last phase. Only do it if everything else is done and deployed.**
+   - How it works: `services/calendar.py` has `get_busy_intervals(calendar_id, start, end)` (5-second timeout, scope `calendar.readonly`). It **raises** on any problem and only ever returns busy time ranges, never event titles. `GOOGLE_SERVICE_ACCOUNT_JSON` is either the JSON itself (starts with `{`) or a path to the key file.
+   - `routers/slots.py` has the single fallback, `busy_intervals_or_empty`: no calendar id, no service account, or any error means `[]` and one short warning in the log (error type only). A slot is `calendar_busy` when `slot_start < busy_end AND slot_end > busy_start` (touching ranges do not clash); a booked slot stays `booked`. `GET /slots` makes one FreeBusy call for the whole week. `POST /bookings` checks just the slot's own range (409 "The doctor is busy at this time") before the AI call.
+   - The seed leaves `google_calendar_id` empty; only if `DEMO_CALENDAR_ID` is set does the first doctor (Dr. Elena Petrova) get it.
+   - UI: "Doctor busy" (grey block, calendar icon, tooltip "Doctor is busy (Google Calendar)"). Not clickable on the Book page; on the Clinic page it stays deletable (unless in the past).
+   - Tests mock `get_busy_intervals` (autouse stub in `conftest.py`), so no test touches the network.
 
 ## Tech stack
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, lucide-react, date-fns, React Router, TanStack Query, react-hook-form + zod, sonner (toasts), driver.js (tour).
@@ -157,7 +161,8 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
 - `CORS_ORIGINS`
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL` (default `gemini-3.5-flash-lite`, a Flash model on the AI Studio free tier)
-- `GOOGLE_SERVICE_ACCOUNT_JSON` (optional)
+- `GOOGLE_SERVICE_ACCOUNT_JSON` (optional): the JSON content itself, or a path to the key file
+- `DEMO_CALENDAR_ID` (optional, used only by the seed for the first doctor)
 - `TIMEZONE=Europe/Skopje`
 
 **frontend `.env`:**

@@ -61,6 +61,12 @@ def no_real_ai(monkeypatch):
     monkeypatch.setattr("app.routers.bookings.generate_confirmation", ai_off)
 
 
+@pytest.fixture(autouse=True)
+def no_real_calendar(monkeypatch):
+    """Tests never call Google: by default the calendar has no busy times."""
+    monkeypatch.setattr("app.routers.slots.get_busy_intervals", lambda *args, **kwargs: [])
+
+
 @pytest.fixture
 def client():
     return TestClient(app)

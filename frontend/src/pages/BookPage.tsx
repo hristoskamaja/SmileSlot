@@ -1,30 +1,15 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { addWeeks } from 'date-fns'
-import { CalendarX, TriangleAlert } from 'lucide-react'
 import { getDoctors, getServices, getSlots } from '@/api/client'
 import BookingDialog from '@/components/BookingDialog'
-import DayList from '@/components/DayList'
 import DoctorSelect from '@/components/DoctorSelect'
-import Legend from '@/components/Legend'
 import ServiceChips from '@/components/ServiceChips'
-import { Button } from '@/components/ui/button'
+import SlotCalendar from '@/components/SlotCalendar'
 import { Skeleton } from '@/components/ui/skeleton'
-import WeekGrid from '@/components/WeekGrid'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
 import type { Slot } from '@/types'
-
-// Shown instead of the grid when there is nothing to show or something went wrong.
-function Message({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-6 py-16 text-center shadow-sm">
-      <div className="text-muted-foreground">{icon}</div>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {children}
-    </div>
-  )
-}
 
 function BookPage() {
   const [weekStart, setWeekStart] = useState(currentWeekStart)
@@ -56,40 +41,6 @@ function BookPage() {
     slotsQuery.refetch()
   }
 
-  function renderCalendar() {
-    if (error) {
-      return (
-        <Message icon={<TriangleAlert className="size-10" />} title="Something went wrong">
-          <p className="text-muted-foreground">{error.message}</p>
-          <Button onClick={retry}>Retry</Button>
-        </Message>
-      )
-    }
-    if (loading) {
-      return <Skeleton className="h-[640px] rounded-2xl" aria-label="Loading slots" />
-    }
-    if (slotsQuery.data!.length === 0) {
-      return (
-        <Message icon={<CalendarX className="size-10" />} title="No free slots this week — try next week">
-          <Button onClick={() => setWeekStart(addWeeks(weekStart, 1))}>Go to next week</Button>
-        </Message>
-      )
-    }
-    return (
-      <>
-        <div className="hidden md:block">
-          <WeekGrid days={days} slots={slotsQuery.data!} services={services!} onSelect={setSelectedSlot} />
-        </div>
-        <div className="md:hidden">
-          <DayList days={days} slots={slotsQuery.data!} services={services!} onSelect={setSelectedSlot} />
-        </div>
-        <div className="mt-4">
-          <Legend services={services!} />
-        </div>
-      </>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -114,7 +65,17 @@ function BookPage() {
         </div>
       </div>
 
-      {renderCalendar()}
+      <SlotCalendar
+        slots={slotsQuery.data}
+        services={services}
+        days={days}
+        loading={loading}
+        error={error}
+        onRetry={retry}
+        mode="book"
+        onSelect={setSelectedSlot}
+        onNextWeek={() => setWeekStart(addWeeks(weekStart, 1))}
+      />
 
       {selectedSlot && doctors && services && (
         <BookingDialog

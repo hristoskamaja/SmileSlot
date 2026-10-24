@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
-import { Lock } from 'lucide-react'
-import { dayKey, formatTimeRange, isPast, serviceStyle, slotDay } from '@/lib/slots'
+import { Lock, Trash2 } from 'lucide-react'
+import { dayKey, formatTime, formatTimeRange, isPast, serviceStyle, slotDay } from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Service, Slot } from '@/types'
 
@@ -8,11 +8,14 @@ type Props = {
   days: Date[]
   slots: Slot[]
   services: Service[]
+  mode: 'book' | 'clinic' // clinic shows patient names and a delete icon
   onSelect: (slot: Slot) => void
 }
 
 // Mobile view: one section per day, listing only the days that have slots.
-function DayList({ days, slots, services, onSelect }: Props) {
+function DayList({ days, slots, services, mode, onSelect }: Props) {
+  const clinic = mode === 'clinic'
+
   return (
     <div className="space-y-6">
       {days.map((day) => {
@@ -25,13 +28,17 @@ function DayList({ days, slots, services, onSelect }: Props) {
               {daySlots.map((slot) => {
                 const booked = slot.status === 'booked'
                 const past = isPast(slot)
+                const canDelete = clinic && !booked && !past
                 const serviceName = services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
+                const title = booked ? (clinic ? (slot.patient_name ?? 'Booked') : 'Booked') : serviceName
+                const timeLine = clinic && booked ? `${serviceName} · ${formatTimeRange(slot)}` : formatTimeRange(slot)
                 return (
                   <li key={slot.id}>
                     <button
                       type="button"
                       disabled={booked || past}
                       onClick={() => onSelect(slot)}
+                      aria-label={canDelete ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}` : undefined}
                       style={booked ? undefined : serviceStyle(serviceName)}
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left outline-none',
@@ -42,9 +49,12 @@ function DayList({ days, slots, services, onSelect }: Props) {
                     >
                       <span className="flex items-center gap-1.5 font-semibold">
                         {booked && <Lock className="size-4" aria-hidden />}
-                        {booked ? 'Booked' : serviceName}
+                        {title}
                       </span>
-                      <span className="text-sm">{formatTimeRange(slot)}</span>
+                      <span className="flex items-center gap-2 text-sm">
+                        {timeLine}
+                        {canDelete && <Trash2 className="size-4 opacity-60" aria-hidden />}
+                      </span>
                     </button>
                   </li>
                 )

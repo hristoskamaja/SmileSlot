@@ -44,3 +44,11 @@ export type Booking = {
   ai_message: string
   created_at: string
 }
+
+// What the "Add slot" form sends to POST /slots.
+export type SlotInput = {
+  doctor_id: number
+  service_id: number
+  start_at: string // "2026-10-26T09:00": no offset, so the backend reads it as clinic time
+  duration_minutes: number
+}

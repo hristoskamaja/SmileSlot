@@ -1,5 +1,5 @@
 // All HTTP calls to the backend live in this file.
-import type { Booking, BookingInput, Doctor, Service, Slot } from '@/types'
+import type { Booking, BookingInput, Doctor, Service, Slot, SlotInput } from '@/types'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -22,6 +22,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const message = typeof body?.detail === 'string' ? body.detail : `Request failed (${response.status})`
     throw new ApiError(message, response.status)
   }
+  if (response.status === 204) return undefined as T // e.g. DELETE: success with no body
   return response.json()
 }
 
@@ -38,6 +39,18 @@ export function getSlots(doctorId: number, weekStart: string, serviceId?: number
   const params = new URLSearchParams({ doctor_id: String(doctorId), week_start: weekStart })
   if (serviceId !== undefined) params.set('service_id', String(serviceId))
   return request(`/slots?${params}`)
+}
+
+export function createSlot(data: SlotInput): Promise<Slot> {
+  return request('/slots', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+}
+
+export function deleteSlot(slotId: number): Promise<void> {
+  return request(`/slots/${slotId}`, { method: 'DELETE' })
 }
 
 export function createBooking(data: BookingInput): Promise<Booking> {

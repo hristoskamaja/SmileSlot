@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
 // The same rules as the backend (BookingCreate), so most mistakes are caught before sending.
-const bookingSchema = z.object({
+export const bookingSchema = z.object({
   patient_name: z.string().trim().min(1, 'Please enter your name').max(100, 'Name is too long (100 characters max)'),
   patient_email: z.string().trim().pipe(z.email('Please enter a valid email address')),
   // Optional: empty is fine, otherwise 6-20 characters of digits, spaces, + - ( ).

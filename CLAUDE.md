@@ -56,7 +56,7 @@ They evaluate with **~2 hours of work** in mind: "a focused, working app is bett
    - Tests mock `get_busy_intervals` (autouse stub in `conftest.py`), so no test touches the network.
 
 ## Tech stack
-- **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, lucide-react, date-fns, React Router, TanStack Query, react-hook-form + zod, sonner (toasts), driver.js (tour).
+- **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, lucide-react, date-fns, React Router, TanStack Query, react-hook-form + zod, sonner (toasts), driver.js (tour). Tests (local only, no CI): Vitest + React Testing Library + jest-dom + user-event on jsdom, run with `npm test`.
 - **Backend:** Python, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic (migrations), psycopg, pytest. Gemini via the official `google-genai` SDK. Google Calendar via `google-api-python-client` + `google-auth`.
 - **Database:** PostgreSQL (local via Docker Compose; hosted on Neon).
 - **Hosting:** frontend on Vercel, backend on Render, database on Neon.

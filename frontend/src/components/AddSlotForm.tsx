@@ -18,7 +18,7 @@ function toMinutes(time: string): number {
 }
 
 // Every field is a string because the date input and the selects all work with strings.
-const slotSchema = z
+export const slotSchema = z
   .object({
     date: z
       .string()

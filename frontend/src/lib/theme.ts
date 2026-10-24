@@ -2,15 +2,15 @@ export type Theme = 'light' | 'dark'
 
 const STORAGE_KEY = 'smileslot-theme'
 
-// The saved choice, or else the system setting. (index.html does the same before the page is drawn.)
+// The saved choice, or else light. The system setting (prefers-color-scheme) is ignored on purpose:
+// dark mode only starts after the user clicked the toggle. (index.html does the same before the page is drawn.)
 export function getInitialTheme(): Theme {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === 'light' || saved === 'dark') return saved
+    if (localStorage.getItem(STORAGE_KEY) === 'dark') return 'dark'
   } catch {
-    // Storage is blocked (private mode, browser settings): fall back to the system setting.
+    // Storage is blocked (private mode, browser settings): use the light theme.
   }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'light'
 }
 
 // The dark colors in index.css apply to everything inside <html class="dark">.

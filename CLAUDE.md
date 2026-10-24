@@ -149,6 +149,10 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
 4. **Onboarding tour:**
    - driver.js, 4 steps: doctor selector → service filters → grid → help button.
    - A "seen" flag in localStorage, accessed inside try/catch.
+5. **Dark mode:**
+   - A sun/moon toggle in the header, next to the "?" button. The first visit follows `prefers-color-scheme`; a click is saved in localStorage (`smileslot-theme`, always in try/catch).
+   - A `dark` class on `<html>` (set by `lib/theme.ts`, and by a small script in `index.html` before the first paint). `index.css` has the dark values for the same CSS variables; components never hardcode colors. Sonner is told the theme through its `theme` prop; the driver.js popover follows the variables.
+   - Text contrast stays at least 4.5:1 in dark mode, including the 70%-opacity time line on slot blocks.
 
 ### Always handle
 - loading skeletons

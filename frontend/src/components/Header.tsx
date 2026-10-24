@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { CalendarCheck, CircleHelp } from 'lucide-react'
+import { CalendarCheck, CircleHelp, Moon, Sun } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import logo from '@/assets/logo.svg'
 import MyAppointmentsDialog from '@/components/MyAppointmentsDialog'
 import { Button } from '@/components/ui/button'
+import type { Theme } from '@/lib/theme'
 import { startTour, tourForPath } from '@/lib/tour'
 import { cn } from '@/lib/utils'
 
@@ -14,7 +15,12 @@ function navClass({ isActive }: { isActive: boolean }) {
   )
 }
 
-function Header() {
+type Props = {
+  theme: Theme
+  onToggleTheme: () => void
+}
+
+function Header({ theme, onToggleTheme }: Props) {
   const { pathname } = useLocation()
   const [showAppointments, setShowAppointments] = useState(false)
 
@@ -66,6 +72,16 @@ function Header() {
             onClick={restartTour}
           >
             <CircleHelp className="size-5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 rounded-full"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            onClick={onToggleTheme}
+          >
+            {/* The icon shows what a click switches to. */}
+            {theme === 'dark' ? <Sun className="size-5" aria-hidden /> : <Moon className="size-5" aria-hidden />}
           </Button>
         </div>
       </div>

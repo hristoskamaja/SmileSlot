@@ -83,25 +83,27 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Dark mode: the "dark" class is put on <html> by lib/theme.ts. Same names as above, dark values. */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    color-scheme: dark; /* native controls (date and time inputs, scrollbars) turn dark too */
+    --background: oklch(0.18 0.02 215);
+    --foreground: oklch(0.95 0.01 190);
+    --card: oklch(0.23 0.025 215);
+    --card-foreground: oklch(0.95 0.01 190);
+    --popover: oklch(0.25 0.025 215);
+    --popover-foreground: oklch(0.95 0.01 190);
+    --primary: oklch(0.78 0.13 182); /* a lighter teal, with dark text on top of it */
+    --primary-foreground: oklch(0.2 0.04 200);
+    --secondary: oklch(0.29 0.025 215);
+    --secondary-foreground: oklch(0.95 0.01 190);
+    --muted: oklch(0.29 0.025 215);
+    --muted-foreground: oklch(0.76 0.02 205);
+    --accent: oklch(0.29 0.025 215);
+    --accent-foreground: oklch(0.95 0.01 190);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --border: oklch(1 0 0 / 12%);
+    --input: oklch(1 0 0 / 16%);
+    --ring: oklch(0.78 0.13 182);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -164,6 +166,39 @@
   --busy-text: #747c7e;
 }
 
+/* The same colors for dark mode: dark pastel backgrounds with light text. (After :root, so these win.) */
+.dark {
+  --service-checkup-bg: #12384a;
+  --service-checkup-border: #1f5a75;
+  --service-checkup-text: #bfe9ff;
+
+  --service-cleaning-bg: #0f3d33;
+  --service-cleaning-border: #1d6653;
+  --service-cleaning-text: #b5f0da;
+
+  --service-filling-bg: #46320f;
+  --service-filling-border: #735320;
+  --service-filling-text: #ffdca6;
+
+  --service-whitening-bg: #432040;
+  --service-whitening-border: #6e3566;
+  --service-whitening-text: #f8cdf1;
+
+  --booked-bg: #2a3236;
+  --booked-border: #3a4549;
+  --booked-text: #cdd5d8;
+  --booked-stripe: #3d484c;
+
+  --summary-bg: #0f3d33;
+  --summary-border: #1d6653;
+  --message-bg: #123f38;
+  --message-border: #226b5e;
+
+  --busy-bg: #2a3236;
+  --busy-border: #3a4549;
+  --busy-text: #cdd5d8;
+}
+
 /* Grey diagonal stripes for booked slots. */
 .booked-stripes {
   background-color: var(--booked-bg);
@@ -195,6 +230,17 @@
   font-weight: 600;
   color: color-mix(in oklch, var(--primary), black 30%); /* a darker teal so the small text is readable */
 }
+
+/* In dark mode the primary is already light, so it is used as it is. */
+.dark .smileslot-tour .driver-popover-progress-text {
+  color: var(--primary);
+}
+
+/* driver.js draws its arrow in white. Only the border on the side that touches the popover is visible. */
+.smileslot-tour .driver-popover-arrow-side-left { border-left-color: var(--card); }
+.smileslot-tour .driver-popover-arrow-side-right { border-right-color: var(--card); }
+.smileslot-tour .driver-popover-arrow-side-top { border-top-color: var(--card); }
+.smileslot-tour .driver-popover-arrow-side-bottom { border-bottom-color: var(--card); }
 
 .smileslot-tour .driver-popover-title {
   font-size: 22px;

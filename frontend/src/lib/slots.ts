@@ -21,7 +21,7 @@ const SERVICE_KEYS: Record<string, string> = {
 // Slot blocks and the legend both call this, so they always share the same colors.
 export function serviceStyle(serviceName: string): CSSProperties {
   const key = SERVICE_KEYS[serviceName]
-  if (!key) return { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1', color: '#0f172a' } // unknown service
+  if (!key) return { backgroundColor: 'var(--muted)', borderColor: 'var(--border)', color: 'var(--foreground)' } // unknown service
   return {
     backgroundColor: `var(--service-${key}-bg)`,
     borderColor: `var(--service-${key}-border)`,

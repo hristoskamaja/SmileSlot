@@ -1,6 +1,7 @@
 import { CircleHelp, Smile } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { startTour } from '@/lib/tour'
 import { cn } from '@/lib/utils'
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -11,6 +12,14 @@ function navClass({ isActive }: { isActive: boolean }) {
 }
 
 function Header() {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  function restartTour() {
+    if (pathname !== '/') navigate('/') // the tour is about the Book page
+    startTour() // waits until that page's elements exist
+  }
+
   return (
     <header className="border-b bg-card">
       <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-6 px-4 sm:px-6">
@@ -32,8 +41,14 @@ function Header() {
           </NavLink>
         </nav>
 
-        {/* Starts the onboarding tour in a later step. */}
-        <Button variant="outline" size="icon" className="ml-auto size-10 rounded-full" aria-label="Restart tour">
+        <Button
+          variant="outline"
+          size="icon"
+          className="ml-auto size-10 rounded-full"
+          aria-label="Restart tour"
+          data-tour="help-button"
+          onClick={restartTour}
+        >
           <CircleHelp className="size-5" />
         </Button>
       </div>

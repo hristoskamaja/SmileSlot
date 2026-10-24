@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { addWeeks } from 'date-fns'
 import { getDoctors, getServices, getSlots } from '@/api/client'
@@ -9,6 +9,7 @@ import SlotCalendar from '@/components/SlotCalendar'
 import { Skeleton } from '@/components/ui/skeleton'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
+import { hasSeenTour, startTour } from '@/lib/tour'
 import type { Slot } from '@/types'
 
 function BookPage() {
@@ -30,6 +31,11 @@ function BookPage() {
     queryFn: () => getSlots(doctorId!, dayKey(weekStart), serviceId ?? undefined),
     enabled: doctorId !== undefined, // wait until the doctors have loaded
   })
+
+  // Show the tour on the first visit.
+  useEffect(() => {
+    if (!hasSeenTour()) startTour()
+  }, [])
 
   const days = weekDays(weekStart)
   const error = doctorsQuery.error ?? servicesQuery.error ?? slotsQuery.error

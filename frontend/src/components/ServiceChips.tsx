@@ -12,7 +12,7 @@ function ServiceChips({ services, selectedId, onChange }: Props) {
   const chips = [{ id: null, name: 'All' }, ...services]
 
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by service">
+    <div className="flex flex-wrap gap-2" data-tour="service-filters" role="group" aria-label="Filter by service">
       {chips.map((chip) => {
         const active = chip.id === selectedId
         return (

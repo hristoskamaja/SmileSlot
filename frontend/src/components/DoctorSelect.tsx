@@ -43,6 +43,7 @@ function DoctorSelect({ doctors, selectedId, onChange }: Props) {
     <Select value={String(selected.id)} onValueChange={(value) => value && onChange(Number(value))}>
       <SelectTrigger
         aria-label="Doctor"
+        data-tour="doctor-select"
         // data-[size=default]:h-auto is needed because the shadcn trigger sets a fixed height the same way.
         className="w-full min-w-72 rounded-2xl bg-card px-4 py-2.5 shadow-sm data-[size=default]:h-auto sm:w-auto sm:min-w-80"
       >

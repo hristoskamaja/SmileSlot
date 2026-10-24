@@ -24,7 +24,11 @@ type Props = {
 // Shown instead of the grid when there is nothing to show or something went wrong.
 function Message({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-6 py-16 text-center shadow-sm">
+    // Also a tour target, so the tour does not wait for a grid that will not appear.
+    <div
+      data-tour="calendar"
+      className="flex flex-col items-center gap-3 rounded-2xl border bg-card px-6 py-16 text-center shadow-sm"
+    >
       <div className="text-muted-foreground">{icon}</div>
       <h2 className="text-lg font-semibold">{title}</h2>
       {children}
@@ -54,10 +58,10 @@ function SlotCalendar({ slots, services, days, loading, error, onRetry, mode, on
   }
   return (
     <>
-      <div className="hidden md:block">
+      <div className="hidden md:block" data-tour="calendar">
         <WeekGrid days={days} slots={slots} services={services} mode={mode} onSelect={onSelect} />
       </div>
-      <div className="md:hidden">
+      <div className="md:hidden" data-tour="calendar">
         <DayList days={days} slots={slots} services={services} mode={mode} onSelect={onSelect} />
       </div>
       <div className="mt-4">

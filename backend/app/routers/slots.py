@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.config import settings
 from app.db import get_db
 from app.models import Doctor, Service, Slot
-from app.schemas import SlotCreate, SlotOut
+from app.schemas import BookingDetails, SlotCreate, SlotOut
 from app.services.calendar import get_busy_intervals
 
 router = APIRouter()
@@ -88,6 +88,15 @@ def list_slots(
     busy = busy_intervals_or_empty(doctor, start, end) if doctor else []
 
     return [to_slot_out(slot, busy) for slot in slots]
+
+
+@router.get("/slots/{slot_id}/booking", response_model=BookingDetails)
+def get_slot_booking(slot_id: int, db: Session = Depends(get_db)):
+    """The patient's contact details, for the clinic view. (No login yet, so this is as open as the rest.)"""
+    slot = db.get(Slot, slot_id)
+    if slot is None or slot.booking is None:
+        raise HTTPException(404, "Booking not found")
+    return slot.booking
 
 
 @router.post("/slots", response_model=SlotOut, status_code=201)

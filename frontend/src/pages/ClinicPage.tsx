@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { addWeeks } from 'date-fns'
 import { getDoctors, getServices, getSlots } from '@/api/client'
 import AddSlotForm from '@/components/AddSlotForm'
+import BookingDetailsDialog from '@/components/BookingDetailsDialog'
 import DeleteSlotDialog from '@/components/DeleteSlotDialog'
 import DoctorSelect from '@/components/DoctorSelect'
 import SlotCalendar from '@/components/SlotCalendar'
@@ -17,6 +18,7 @@ function ClinicPage() {
   const [weekStart, setWeekStart] = useState(currentWeekStart)
   const [pickedDoctorId, setPickedDoctorId] = useState<number | null>(null)
   const [slotToDelete, setSlotToDelete] = useState<Slot | null>(null) // the slot in the delete confirm
+  const [slotToView, setSlotToView] = useState<Slot | null>(null) // the booked slot in the details dialog
 
   const doctorsQuery = useQuery({ queryKey: ['doctors'], queryFn: getDoctors })
   const servicesQuery = useQuery({ queryKey: ['services'], queryFn: getServices })
@@ -46,6 +48,15 @@ function ClinicPage() {
     servicesQuery.refetch()
     slotsQuery.refetch()
   }
+
+  // A booked slot shows its details; any other slot (available or busy) can be deleted.
+  function handleSelect(slot: Slot) {
+    if (slot.status === 'booked') setSlotToView(slot)
+    else setSlotToDelete(slot)
+  }
+
+  const serviceName = (slot: Slot) => services?.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
+  const viewedDoctor = doctors?.find((d) => d.id === slotToView?.doctor_id)
 
   return (
     <div className="space-y-6">
@@ -85,7 +96,7 @@ function ClinicPage() {
             error={error}
             onRetry={retry}
             mode="clinic"
-            onSelect={setSlotToDelete}
+            onSelect={handleSelect}
           />
         </div>
       </div>
@@ -94,8 +105,18 @@ function ClinicPage() {
         <DeleteSlotDialog
           key={slotToDelete.id}
           slot={slotToDelete}
-          serviceName={services.find((s) => s.id === slotToDelete.service_id)?.name ?? 'Appointment'}
+          serviceName={serviceName(slotToDelete)}
           onClose={() => setSlotToDelete(null)}
+        />
+      )}
+
+      {slotToView && viewedDoctor && (
+        <BookingDetailsDialog
+          key={slotToView.id}
+          slot={slotToView}
+          doctor={viewedDoctor}
+          serviceName={serviceName(slotToView)}
+          onClose={() => setSlotToView(null)}
         />
       )}
     </div>

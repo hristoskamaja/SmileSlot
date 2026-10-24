@@ -87,7 +87,7 @@ smileslot/
 - **doctors:** `id`, `name`, `specialty`, `color`, `google_calendar_id` (nullable)
 - **services:** `id`, `name`, `duration_minutes`, `description`
 - **slots:** `id`, `doctor_id` (FK), `service_id` (FK), `start_at` (timestamptz), `duration_minutes`, `created_at`
-- **bookings:** `id`, `slot_id` (FK, **UNIQUE**), `patient_name`, `patient_email`, `note` (nullable), `ai_message`, `cancel_token` (nullable), `created_at`
+- **bookings:** `id`, `slot_id` (FK, **UNIQUE**), `patient_name`, `patient_email`, `patient_phone` (nullable), `note` (nullable), `ai_message`, `cancel_token` (nullable), `created_at`
 
 The **UNIQUE constraint on `bookings.slot_id`** is the real protection against double booking. Insert the booking inside a transaction. If the insert fails on the unique constraint, return **409 Conflict**.
 
@@ -104,10 +104,11 @@ A slot's `status` is computed, not stored:
 | GET | `/health` | health check |
 | GET | `/doctors` | list doctors |
 | GET | `/services` | list services |
-| GET | `/slots?doctor_id=&week_start=&service_id=` | slots for one doctor and week, each with computed `status` (+ `patient_name` when booked, for the clinic view) |
+| GET | `/slots?doctor_id=&week_start=&service_id=` | slots for one doctor and week, each with computed `status` (+ `patient_name` when booked, for the clinic view). **Never** returns email, phone or note |
+| GET | `/slots/{id}/booking` | the booking's `patient_name`, `patient_email`, `patient_phone`, `note`, `created_at`, for the clinic details dialog. 404 if the slot has no booking. Never includes `cancel_token` |
 | POST | `/slots` | create a slot. Validate: in the future, positive duration, no overlap with the same doctor's slots (422 with a clear message) |
 | DELETE | `/slots/{id}` | delete a slot; only if not booked (409 otherwise) |
-| POST | `/bookings` | book a slot. Validate name and email (Pydantic `EmailStr`). Reject past, booked, or calendar_busy slots (409). Returns the booking incl. `ai_message` and `cancel_token` (201) |
+| POST | `/bookings` | book a slot. Validate name and email (Pydantic `EmailStr`). Optional `patient_phone`: trimmed, empty counts as not provided, otherwise 6-20 characters of digits, spaces, `+ - ( )` (422 if not). The phone is stored but never echoed in the response, put in localStorage, or sent to Gemini. Reject past, booked, or calendar_busy slots (409). Returns the booking incl. `ai_message` and `cancel_token` (201) |
 | DELETE | `/bookings/{id}?token=` | cancel a booking, up to 24 hours before the slot starts (`CANCELLATION_HOURS` in `config.py`). 404 if the booking does not exist; 403 if the token is missing or wrong (or the booking has none); 409 if the slot starts in less than 24 hours or is in the past. Otherwise 204, and the slot is available again |
 
 Return errors in one consistent shape: `{ "detail": "human readable message" }`.
@@ -135,13 +136,15 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
    - A legend under the grid.
    - Below 768px width, show a list grouped by day instead of the grid.
 2. **Booking dialog:**
-   - Summary card plus name, email, and optional note fields.
+   - Summary card plus name, email, optional phone, and optional note fields.
    - On 409, show the toast "Sorry, this slot was just booked" and refetch.
    - On success, show a confirmation view with the summary and a card "A message for you" showing `ai_message`.
 3. **Clinic (`/clinic`):**
    - Doctor selector.
    - "Add slot" form: date, start time in 15-min steps, service with auto-filled duration.
    - The same grid, where booked slots show the patient's name and available slots can be deleted (with confirm).
+   - Clicking a booked slot opens a read-only details dialog (service, doctor, date and time, patient name, email, phone, note; "Not provided" for empty fields), loaded from `GET /slots/{id}/booking`.
+   - The header's "My appointments" button is hidden on this page.
    - A stats row: total / booked / available this week.
 4. **Onboarding tour:**
    - driver.js, 4 steps: doctor selector → service filters → grid → help button.

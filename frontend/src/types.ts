@@ -32,7 +32,17 @@ export type BookingInput = {
   slot_id: number
   patient_name: string
   patient_email: string
+  patient_phone?: string
   note?: string
+}
+
+// What the clinic sees about a booked slot (GET /slots/{id}/booking).
+export type BookingDetails = {
+  patient_name: string
+  patient_email: string
+  patient_phone: string | null
+  note: string | null
+  created_at: string
 }
 
 export type Booking = {

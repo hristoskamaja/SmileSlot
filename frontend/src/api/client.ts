@@ -1,5 +1,5 @@
 // All HTTP calls to the backend live in this file.
-import type { BookingInput, CreatedBooking, Doctor, Service, Slot, SlotInput } from '@/types'
+import type { BookingDetails, BookingInput, CreatedBooking, Doctor, Service, Slot, SlotInput } from '@/types'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -39,6 +39,11 @@ export function getSlots(doctorId: number, weekStart: string, serviceId?: number
   const params = new URLSearchParams({ doctor_id: String(doctorId), week_start: weekStart })
   if (serviceId !== undefined) params.set('service_id', String(serviceId))
   return request(`/slots?${params}`)
+}
+
+// The patient's contact details, for the clinic page.
+export function getSlotBooking(slotId: number): Promise<BookingDetails> {
+  return request(`/slots/${slotId}/booking`)
 }
 
 export function createSlot(data: SlotInput): Promise<Slot> {

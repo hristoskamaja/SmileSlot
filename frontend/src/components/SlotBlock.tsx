@@ -23,8 +23,10 @@ function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
   const showTime = slot.duration_minutes >= MIN_MINUTES_FOR_TIME
   const clinic = mode === 'clinic'
   const canDelete = clinic && !booked && !past
-  // Patients cannot book a busy slot; in the clinic it stays clickable so staff can delete it.
-  const disabled = booked || past || (busy && !clinic)
+  // Patients cannot click booked or busy slots. In the clinic they stay clickable: a booked slot opens
+  // its details, a busy one can be deleted. Past slots are never clickable.
+  const disabled = past || (!clinic && (booked || busy))
+  const canView = clinic && booked && !past
 
   const title = slotTitle(slot, serviceName, clinic, mine)
   // In the clinic view a booked block names the service too, since the title is the patient.
@@ -37,7 +39,13 @@ function SlotBlock({ slot, serviceName, style, mode, mine, onSelect }: Props) {
       disabled={disabled}
       onClick={() => onSelect(slot)}
       title={busy ? BUSY_TOOLTIP : undefined}
-      aria-label={canDelete ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}` : undefined}
+      aria-label={
+        canDelete
+          ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}`
+          : canView
+            ? `View booking of ${slot.patient_name} at ${formatTime(slot.start_at)}`
+            : undefined
+      }
       // Booked slots get their colors from a class (.my-booking or .booked-stripes); busy ones from the busy
       // variables; the others from the service.
       style={{ ...style, ...(booked ? {} : busy ? busyStyle : serviceStyle(serviceName)) }}

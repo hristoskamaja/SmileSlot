@@ -57,6 +57,7 @@ function BookingDialog({ slot, doctor, serviceName, onClose }: Props) {
       slot_id: slot.id,
       patient_name: values.patient_name,
       patient_email: values.patient_email,
+      patient_phone: values.patient_phone || undefined, // an empty phone is not sent
       note: values.note.trim() || undefined, // an empty note is not sent
     })
   }

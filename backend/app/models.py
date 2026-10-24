@@ -53,6 +53,7 @@ class Booking(Base):
     slot_id: Mapped[int] = mapped_column(ForeignKey("slots.id"))
     patient_name: Mapped[str] = mapped_column(String(100))
     patient_email: Mapped[str] = mapped_column(String(255))
+    patient_phone: Mapped[str | None] = mapped_column(String(20))
     note: Mapped[str | None] = mapped_column(Text)
     ai_message: Mapped[str] = mapped_column(Text)
     # A secret that only the patient who booked knows. It is needed to cancel the booking.

@@ -10,6 +10,13 @@ import { Textarea } from '@/components/ui/textarea'
 const bookingSchema = z.object({
   patient_name: z.string().trim().min(1, 'Please enter your name').max(100, 'Name is too long (100 characters max)'),
   patient_email: z.string().trim().pipe(z.email('Please enter a valid email address')),
+  // Optional: empty is fine, otherwise 6-20 characters of digits, spaces, + - ( ).
+  patient_phone: z
+    .string()
+    .trim()
+    .refine((phone) => phone === '' || (/^[0-9 +\-()]+$/.test(phone) && phone.length >= 6 && phone.length <= 20), {
+      message: 'Phone must be 6–20 characters: digits, spaces, + - ( )',
+    }),
   note: z.string().max(500, 'Note is too long (500 characters max)'),
 })
 
@@ -38,7 +45,7 @@ function BookingForm({ isPending, onSubmit }: Props) {
     formState: { errors },
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
-    defaultValues: { patient_name: '', patient_email: '', note: '' },
+    defaultValues: { patient_name: '', patient_email: '', patient_phone: '', note: '' },
   })
 
   return (
@@ -72,6 +79,22 @@ function BookingForm({ isPending, onSubmit }: Props) {
           {...register('patient_email')}
         />
         <ErrorText id="patient_email_error" message={errors.patient_email?.message} />
+      </div>
+
+      <div>
+        <label htmlFor="patient_phone" className="mb-1.5 block text-base font-medium">
+          Phone <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <Input
+          id="patient_phone"
+          type="tel"
+          autoComplete="tel"
+          className={inputClass}
+          aria-invalid={!!errors.patient_phone}
+          aria-describedby="patient_phone_error"
+          {...register('patient_phone')}
+        />
+        <ErrorText id="patient_phone_error" message={errors.patient_phone?.message} />
       </div>
 
       <div>

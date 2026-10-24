@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from typing import Literal
 
@@ -47,6 +48,7 @@ class BookingCreate(BaseModel):
     slot_id: int
     patient_name: str = Field(min_length=1, max_length=100)
     patient_email: EmailStr
+    patient_phone: str | None = None
     note: str | None = Field(default=None, max_length=500)
 
     @field_validator("patient_name")
@@ -55,6 +57,20 @@ class BookingCreate(BaseModel):
         value = value.strip()
         if not value:
             raise ValueError("Name must not be empty")
+        return value
+
+    @field_validator("patient_phone")
+    @classmethod
+    def clean_phone(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            return None  # an empty phone counts as "not provided"
+        if not 6 <= len(value) <= 20:
+            raise ValueError("Phone must be 6 to 20 characters")
+        if not re.fullmatch(r"[0-9 +\-()]+", value):
+            raise ValueError("Phone may only contain digits, spaces, + - ( )")
         return value
 
 
@@ -67,6 +83,18 @@ class BookingOut(BaseModel):
     patient_email: str
     note: str | None
     ai_message: str
+    created_at: datetime
+
+
+class BookingDetails(BaseModel):
+    """What the clinic sees about a booked slot. Never part of the public slots list."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    patient_name: str
+    patient_email: str
+    patient_phone: str | None
+    note: str | None
     created_at: datetime
 
 

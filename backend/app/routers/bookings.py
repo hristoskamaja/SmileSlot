@@ -72,6 +72,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
         slot_id=slot.id,
         patient_name=data.patient_name,
         patient_email=data.patient_email,
+        patient_phone=data.patient_phone,
         note=data.note,
         ai_message=ai_message,
         cancel_token=secrets.token_urlsafe(32),  # random and unguessable; only returned to the patient

@@ -45,8 +45,10 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
                 const mine = isMine?.(slot) ?? false
                 const past = isPast(slot)
                 const canDelete = clinic && !booked && !past
-                // Patients cannot book a busy slot; in the clinic it stays clickable so staff can delete it.
-                const disabled = booked || past || (busy && !clinic)
+                // Patients cannot click booked or busy slots. In the clinic they stay clickable: a booked slot
+                // opens its details, a busy one can be deleted. Past slots are never clickable.
+                const disabled = past || (!clinic && (booked || busy))
+                const canView = clinic && booked && !past
                 const serviceName = services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
                 const title = slotTitle(slot, serviceName, clinic, mine)
                 const timeLine = clinic && booked ? `${serviceName} · ${formatTimeRange(slot)}` : formatTimeRange(slot)
@@ -58,7 +60,13 @@ function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
                       disabled={disabled}
                       onClick={() => onSelect(slot)}
                       title={busy ? BUSY_TOOLTIP : undefined}
-                      aria-label={canDelete ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}` : undefined}
+                      aria-label={
+                        canDelete
+                          ? `Delete ${serviceName} slot at ${formatTime(slot.start_at)}`
+                          : canView
+                            ? `View booking of ${slot.patient_name} at ${formatTime(slot.start_at)}`
+                            : undefined
+                      }
                       style={booked ? undefined : busy ? busyStyle : serviceStyle(serviceName)}
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left outline-none',

@@ -45,15 +45,18 @@ function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="h-10 rounded-full px-3 sm:px-4"
-            aria-label="My appointments"
-            onClick={() => setShowAppointments(true)}
-          >
-            <CalendarCheck className="size-5" aria-hidden />
-            <span className="hidden text-base sm:inline">My appointments</span>
-          </Button>
+          {/* The clinic staff have no appointments of their own, so the button is only for patients. */}
+          {pathname !== '/clinic' && (
+            <Button
+              variant="outline"
+              className="h-10 rounded-full px-3 sm:px-4"
+              aria-label="My appointments"
+              onClick={() => setShowAppointments(true)}
+            >
+              <CalendarCheck className="size-5" aria-hidden />
+              <span className="hidden text-base sm:inline">My appointments</span>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="icon"

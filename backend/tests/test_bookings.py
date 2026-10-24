@@ -4,8 +4,9 @@ from app.db import SessionLocal
 from app.models import Slot
 
 
-def book(client, slot_id, name="Ana", email="ana@example.com"):
-    return client.post("/api/bookings", json={"slot_id": slot_id, "patient_name": name, "patient_email": email})
+def book(client, slot_id, name="Ana", email="ana@example.com", **extra):
+    body = {"slot_id": slot_id, "patient_name": name, "patient_email": email, **extra}
+    return client.post("/api/bookings", json=body)
 
 
 def test_booking_a_slot_succeeds(client, make_slot):

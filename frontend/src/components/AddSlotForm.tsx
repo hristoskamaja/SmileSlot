@@ -131,7 +131,7 @@ function AddSlotForm({ doctorId, services }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate data-tour="add-slot-form" className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm">
       <h2 className="flex items-center gap-2 text-xl font-semibold">
         <Plus className="size-5 text-primary" aria-hidden />
         Add slot

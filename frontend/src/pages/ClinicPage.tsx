@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { addWeeks } from 'date-fns'
 import { getDoctors, getServices, getSlots } from '@/api/client'
@@ -10,6 +10,7 @@ import StatsRow from '@/components/StatsRow'
 import { Skeleton } from '@/components/ui/skeleton'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
+import { hasSeenTour, startTour } from '@/lib/tour'
 import type { Slot } from '@/types'
 
 function ClinicPage() {
@@ -30,6 +31,11 @@ function ClinicPage() {
     queryFn: () => getSlots(doctorId!, dayKey(weekStart)),
     enabled: doctorId !== undefined,
   })
+
+  // Show the tour on the first visit.
+  useEffect(() => {
+    if (!hasSeenTour('clinic')) startTour('clinic')
+  }, [])
 
   const days = weekDays(weekStart)
   const error = doctorsQuery.error ?? servicesQuery.error ?? slotsQuery.error

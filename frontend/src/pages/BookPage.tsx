@@ -34,7 +34,7 @@ function BookPage() {
 
   // Show the tour on the first visit.
   useEffect(() => {
-    if (!hasSeenTour()) startTour()
+    if (!hasSeenTour('book')) startTour('book')
   }, [])
 
   const days = weekDays(weekStart)

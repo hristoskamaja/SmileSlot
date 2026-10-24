@@ -29,7 +29,7 @@ function StatsRow({ slots }: Props) {
   const available = slots?.filter((slot) => slot.status === 'available').length
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-3" data-tour="stats">
       <StatCard icon={<CalendarDays className="size-6" />} value={slots?.length} label="Slots this week" />
       <StatCard icon={<CircleCheck className="size-6" />} value={booked} label="Booked" />
       <StatCard icon={<Sparkles className="size-6" />} value={available} label="Available" />

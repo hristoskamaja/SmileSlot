@@ -1,7 +1,7 @@
 import { CircleHelp, Smile } from 'lucide-react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { startTour } from '@/lib/tour'
+import { startTour, tourForPath } from '@/lib/tour'
 import { cn } from '@/lib/utils'
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -12,12 +12,12 @@ function navClass({ isActive }: { isActive: boolean }) {
 }
 
 function Header() {
-  const navigate = useNavigate()
   const { pathname } = useLocation()
 
+  // Restarts the tour of the page the user is on. A page without a tour: do nothing.
   function restartTour() {
-    if (pathname !== '/') navigate('/') // the tour is about the Book page
-    startTour() // waits until that page's elements exist
+    const tour = tourForPath(pathname)
+    if (tour) startTour(tour)
   }
 
   return (

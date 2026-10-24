@@ -1,22 +1,19 @@
-import { useEffect, useState } from 'react'
-import { getHealth } from '@/api/client'
+import { Route, Routes } from 'react-router-dom'
+import Header from '@/components/Header'
+import BookPage from '@/pages/BookPage'
 
-// Phase 0 placeholder: proves the frontend can reach the backend.
-// Replaced by the real pages in Phase 1.
 function App() {
-  const [apiStatus, setApiStatus] = useState('checking...')
-
-  useEffect(() => {
-    getHealth()
-      .then((data) => setApiStatus(data.status))
-      .catch(() => setApiStatus('unreachable'))
-  }, [])
-
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-2">
-      <h1 className="text-3xl font-semibold">SmileSlot</h1>
-      <p className="text-muted-foreground">API: {apiStatus}</p>
-    </main>
+    <>
+      <Header />
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <Routes>
+          <Route path="/" element={<BookPage />} />
+          {/* Placeholder until the Clinic page is built. */}
+          <Route path="/clinic" element={<h1 className="text-3xl font-bold">Clinic</h1>} />
+        </Routes>
+      </main>
+    </>
   )
 }
 

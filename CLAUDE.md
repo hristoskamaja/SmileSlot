@@ -58,8 +58,8 @@ They evaluate with **~2 hours of work** in mind: "a focused, working app is bett
 ## Tech stack
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, shadcn/ui, lucide-react, date-fns, React Router, TanStack Query, react-hook-form + zod, sonner (toasts), driver.js (tour). Tests (local only, no CI): Vitest + React Testing Library + jest-dom + user-event on jsdom, run with `npm test`.
 - **Backend:** Python, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic (migrations), psycopg, pytest. Gemini via the official `google-genai` SDK. Google Calendar via `google-api-python-client` + `google-auth`.
-- **Database:** PostgreSQL (local via Docker Compose; hosted on Neon).
-- **Hosting:** frontend on Vercel, backend on Render, database on Neon.
+- **Database:** PostgreSQL (local via Docker Compose; hosted on Render Postgres).
+- **Hosting:** everything on Render: Static Site (frontend), Web Service (backend), Render Postgres (database). See "Deployment".
 
 ## Repository structure
 ```
@@ -180,6 +180,25 @@ All HTTP calls live in `src/api/client.ts`, and types live in `src/types.ts`. Th
 
 Provide `.env.example` files. **Never commit secrets or the service-account key.** Add them to `.gitignore`.
 
+## Deployment (all on Render)
+- **Database: Render Postgres.**
+  - The backend service uses the **Internal URL**. To run the migration and the seed from my computer, I set `DATABASE_URL` to the **External URL** for that command.
+  - `config.py` accepts `postgres://` and `postgresql://` and turns them into `postgresql+psycopg://`; a URL already in that form stays as it is.
+  - The free Render Postgres **expires 30 days after creation**.
+- **Backend: Web Service.**
+  - Root directory `backend`.
+  - Build command: `pip install -r requirements.txt && alembic upgrade head`.
+  - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+  - Python: `backend/.python-version` has `3.12.6`; also set the environment variable `PYTHON_VERSION=3.12.6` (the file may not be found when a root directory is set).
+  - Environment: `DATABASE_URL` (Internal URL), `CORS_ORIGINS`, `GEMINI_API_KEY`, optional `GOOGLE_SERVICE_ACCOUNT_JSON` (the JSON itself).
+  - `CORS_ORIGINS` is a comma-separated list; each origin has its scheme and no trailing slash, e.g. `https://smileslot-web.onrender.com,http://localhost:5173` (spaces after the commas are ignored).
+- **Frontend: Static Site.**
+  - Root directory `frontend`.
+  - Build command: `npm install && npm run build`; publish directory `dist`.
+  - Redirects/Rewrites: source `/*`, destination `/index.html`, action **Rewrite**, so `/clinic` works on refresh.
+  - Environment: `VITE_API_URL` = the backend's public URL **ending in `/api`**, e.g. `https://smileslot-api.onrender.com/api` (as in `frontend/.env.example`). Vite puts it into the build, so changing it needs a new deploy.
+- **Seed: manual.** `python -m app.seed` wipes the data, so it never runs on deploy. Run it from my computer when needed, with `DATABASE_URL` set to the External URL (same for a manual `alembic upgrade head`).
+
 ## Phases (work one phase at a time)
 **Phase 0 — Setup.**
 - Repo structure, Docker Compose Postgres, FastAPI skeleton with `/api/health`, Vite app.
@@ -189,7 +208,7 @@ Provide `.env.example` files. **Never commit secrets or the service-account key.
 - Endpoints for doctors, services, slots, and bookings, with validation and the unique constraint.
 - pytest tests: double booking returns 409, overlapping slot returns 422, booking a past slot is rejected.
 - Frontend Book page, booking dialog, and Clinic page connected to the real API.
-- **Deploy** (Neon + Render + Vercel) and verify the live flow end to end.
+- **Deploy** (everything on Render) and verify the live flow end to end.
 
 **Phase 2 — SHOULD.**
 - Services filter polish, confirmation view, and onboarding tour.

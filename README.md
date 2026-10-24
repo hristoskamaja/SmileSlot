@@ -41,7 +41,7 @@ SCREENSHOTS_HERE
 - **Database:** PostgreSQL
 - **Integrations:** Gemini (`google-genai`), Google Calendar API
 - **Tests:** pytest, Vitest + React Testing Library
-- **Hosting:** HOSTING_TO_CONFIRM (frontend on Vercel, backend on Render, database on Neon)
+- **Hosting:** HOSTING_TO_CONFIRM (everything on Render: Static Site for the frontend, Web Service for the backend, Render Postgres for the database)
 
 ## Run it locally
 You need Node, Python 3.12 and Docker. Commands are for Windows PowerShell; the macOS/Linux difference is in the comment.

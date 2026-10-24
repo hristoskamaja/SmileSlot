@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,16 @@ class Settings(BaseSettings):
     google_service_account_json: str = ""
     # Only used by the seed: the calendar id for the first demo doctor. Empty = none.
     demo_calendar_id: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, url: str) -> str:
+        # Render gives "postgres://..." (some tools "postgresql://..."), but our driver needs "postgresql+psycopg://...".
+        # Only the start is replaced; a URL that already has "+psycopg" matches neither prefix and stays as it is.
+        for old in ("postgresql://", "postgres://"):
+            if url.startswith(old):
+                return "postgresql+psycopg://" + url[len(old):]
+        return url
 
     @property
     def cors_origin_list(self) -> list[str]:

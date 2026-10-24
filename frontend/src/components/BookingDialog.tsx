@@ -6,6 +6,7 @@ import BookingConfirmation from '@/components/BookingConfirmation'
 import BookingForm, { type BookingFormValues } from '@/components/BookingForm'
 import BookingSummary from '@/components/BookingSummary'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { MY_BOOKINGS_KEY, saveMyBooking } from '@/lib/myBookings'
 import type { Booking, Doctor, Slot } from '@/types'
 
 type Props = {
@@ -26,6 +27,18 @@ function BookingDialog({ slot, doctor, serviceName, onClose }: Props) {
     mutationFn: createBooking,
     onSuccess: (newBooking) => {
       setBooking(newBooking)
+      // Remember it in this browser (there is no login) and refresh everything that shows "my bookings".
+      saveMyBooking({
+        slot_id: slot.id,
+        start_at: slot.start_at,
+        duration_minutes: slot.duration_minutes,
+        doctor_name: doctor.name,
+        service_name: serviceName,
+        patient_name: newBooking.patient_name,
+        booking_id: newBooking.id,
+        cancel_token: newBooking.cancel_token, // what lets this browser cancel it later
+      })
+      queryClient.invalidateQueries({ queryKey: MY_BOOKINGS_KEY })
       // Refetch the week so the slot shows as Booked in the grid behind the dialog.
       queryClient.invalidateQueries({ queryKey: ['slots'] })
     },

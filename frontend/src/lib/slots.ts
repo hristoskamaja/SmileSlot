@@ -73,6 +73,18 @@ export function formatTimeRange(slot: Slot): string {
   return `${formatTime(slot.start_at)} – ${formatTime(endIso)}`
 }
 
+// Is this whole day before today? (Today and later days are not.) Both sides are clinic-time dates.
+export function isPastDay(day: Date): boolean {
+  return dayKey(day) < todayInClinic()
+}
+
+// The main text of a slot block: the service, or who booked it.
+export function slotTitle(slot: Slot, serviceName: string, clinic: boolean, mine: boolean): string {
+  if (mine) return 'Your booking'
+  if (slot.status !== 'booked') return serviceName
+  return clinic ? (slot.patient_name ?? 'Booked') : 'Booked'
+}
+
 export function isPast(slot: Slot): boolean {
   return new Date(slot.start_at) < new Date()
 }

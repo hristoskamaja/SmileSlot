@@ -1,5 +1,5 @@
 // All HTTP calls to the backend live in this file.
-import type { Booking, BookingInput, Doctor, Service, Slot, SlotInput } from '@/types'
+import type { BookingInput, CreatedBooking, Doctor, Service, Slot, SlotInput } from '@/types'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -53,10 +53,15 @@ export function deleteSlot(slotId: number): Promise<void> {
   return request(`/slots/${slotId}`, { method: 'DELETE' })
 }
 
-export function createBooking(data: BookingInput): Promise<Booking> {
+export function createBooking(data: BookingInput): Promise<CreatedBooking> {
   return request('/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
+}
+
+// The token proves this browser made the booking (there is no login).
+export function cancelBooking(bookingId: number, token: string): Promise<void> {
+  return request(`/bookings/${bookingId}?token=${encodeURIComponent(token)}`, { method: 'DELETE' })
 }

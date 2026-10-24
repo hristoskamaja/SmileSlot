@@ -3,9 +3,10 @@ import type { Service } from '@/types'
 
 type Props = {
   services: Service[]
+  showMyBooking?: boolean // only the Book page has "Your booking"
 }
 
-function Legend({ services }: Props) {
+function Legend({ services, showMyBooking = false }: Props) {
   return (
     <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground">
       {services.map((service) => (
@@ -19,6 +20,12 @@ function Legend({ services }: Props) {
         <span className="booked-stripes size-4 rounded border" aria-hidden />
         Booked
       </li>
+      {showMyBooking && (
+        <li className="flex items-center gap-2">
+          <span className="my-booking size-4 rounded border" aria-hidden />
+          Your booking
+        </li>
+      )}
     </ul>
   )
 }

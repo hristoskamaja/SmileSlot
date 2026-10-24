@@ -15,6 +15,7 @@ type Props = {
   error: Error | null
   onRetry: () => void
   mode: 'book' | 'clinic'
+  isMine?: (slot: Slot) => boolean // book page only: marks the user's own bookings
   onSelect: (slot: Slot) => void
   // When given, an empty week shows "try next week" with this button.
   // The clinic page leaves it out and shows the empty grid instead.
@@ -37,7 +38,7 @@ function Message({ icon, title, children }: { icon: ReactNode; title: string; ch
 }
 
 // The weekly calendar with all its states, shared by the Book and Clinic pages.
-function SlotCalendar({ slots, services, days, loading, error, onRetry, mode, onSelect, onNextWeek }: Props) {
+function SlotCalendar({ slots, services, days, loading, error, onRetry, mode, isMine, onSelect, onNextWeek }: Props) {
   if (error) {
     return (
       <Message icon={<TriangleAlert className="size-10" />} title="Something went wrong">
@@ -59,13 +60,13 @@ function SlotCalendar({ slots, services, days, loading, error, onRetry, mode, on
   return (
     <>
       <div className="hidden md:block" data-tour="calendar">
-        <WeekGrid days={days} slots={slots} services={services} mode={mode} onSelect={onSelect} />
+        <WeekGrid days={days} slots={slots} services={services} mode={mode} isMine={isMine} onSelect={onSelect} />
       </div>
       <div className="md:hidden" data-tour="calendar">
-        <DayList days={days} slots={slots} services={services} mode={mode} onSelect={onSelect} />
+        <DayList days={days} slots={slots} services={services} mode={mode} isMine={isMine} onSelect={onSelect} />
       </div>
       <div className="mt-4">
-        <Legend services={services} />
+        <Legend services={services} showMyBooking={mode === 'book'} />
       </div>
     </>
   )

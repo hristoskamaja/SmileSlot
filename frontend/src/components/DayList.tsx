@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
-import { Lock, Trash2 } from 'lucide-react'
-import { dayKey, formatTime, formatTimeRange, isPast, serviceStyle, slotDay } from '@/lib/slots'
+import { CircleCheck, Lock, Trash2 } from 'lucide-react'
+import { dayKey, formatTime, formatTimeRange, isPast, isPastDay, serviceStyle, slotDay, slotTitle } from '@/lib/slots'
 import { cn } from '@/lib/utils'
 import type { Service, Slot } from '@/types'
 
@@ -9,11 +9,12 @@ type Props = {
   slots: Slot[]
   services: Service[]
   mode: 'book' | 'clinic' // clinic shows patient names and a delete icon
+  isMine?: (slot: Slot) => boolean // book page only: is this booked slot the user's own?
   onSelect: (slot: Slot) => void
 }
 
 // Mobile view: one section per day, listing only the days that have slots.
-function DayList({ days, slots, services, mode, onSelect }: Props) {
+function DayList({ days, slots, services, mode, isMine, onSelect }: Props) {
   const clinic = mode === 'clinic'
 
   return (
@@ -23,15 +24,19 @@ function DayList({ days, slots, services, mode, onSelect }: Props) {
         if (daySlots.length === 0) return null
         return (
           <section key={dayKey(day)}>
-            <h2 className="mb-2 font-semibold">{format(day, 'EEEE, MMM d')}</h2>
+            <h2 className={cn('mb-2 font-semibold', isPastDay(day) && 'text-muted-foreground/60')}>
+              {format(day, 'EEEE, MMM d')}
+            </h2>
             <ul className="space-y-2">
               {daySlots.map((slot) => {
                 const booked = slot.status === 'booked'
+                const mine = isMine?.(slot) ?? false
                 const past = isPast(slot)
                 const canDelete = clinic && !booked && !past
                 const serviceName = services.find((s) => s.id === slot.service_id)?.name ?? 'Appointment'
-                const title = booked ? (clinic ? (slot.patient_name ?? 'Booked') : 'Booked') : serviceName
+                const title = slotTitle(slot, serviceName, clinic, mine)
                 const timeLine = clinic && booked ? `${serviceName} · ${formatTimeRange(slot)}` : formatTimeRange(slot)
+                const BookedIcon = mine ? CircleCheck : Lock
                 return (
                   <li key={slot.id}>
                     <button
@@ -43,12 +48,12 @@ function DayList({ days, slots, services, mode, onSelect }: Props) {
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left outline-none',
                         'focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default',
-                        booked && 'booked-stripes',
+                        booked && (mine ? 'my-booking' : 'booked-stripes'),
                         past && 'opacity-50',
                       )}
                     >
                       <span className="flex items-center gap-1.5 font-semibold">
-                        {booked && <Lock className="size-4" aria-hidden />}
+                        {booked && <BookedIcon className="size-4" aria-hidden />}
                         {title}
                       </span>
                       <span className="flex items-center gap-2 text-sm">

@@ -1,6 +1,8 @@
-import { CircleHelp } from 'lucide-react'
+import { useState } from 'react'
+import { CalendarCheck, CircleHelp } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import logo from '@/assets/logo.svg'
+import MyAppointmentsDialog from '@/components/MyAppointmentsDialog'
 import { Button } from '@/components/ui/button'
 import { startTour, tourForPath } from '@/lib/tour'
 import { cn } from '@/lib/utils'
@@ -14,6 +16,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 function Header() {
   const { pathname } = useLocation()
+  const [showAppointments, setShowAppointments] = useState(false)
 
   // Restarts the tour of the page the user is on. A page without a tour: do nothing.
   function restartTour() {
@@ -41,17 +44,29 @@ function Header() {
           </NavLink>
         </nav>
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="ml-auto size-10 rounded-full"
-          aria-label="Restart tour"
-          data-tour="help-button"
-          onClick={restartTour}
-        >
-          <CircleHelp className="size-5" />
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="h-10 rounded-full px-3 sm:px-4"
+            aria-label="My appointments"
+            onClick={() => setShowAppointments(true)}
+          >
+            <CalendarCheck className="size-5" aria-hidden />
+            <span className="hidden text-base sm:inline">My appointments</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 rounded-full"
+            aria-label="Restart tour"
+            data-tour="help-button"
+            onClick={restartTour}
+          >
+            <CircleHelp className="size-5" />
+          </Button>
+        </div>
       </div>
+      {showAppointments && <MyAppointmentsDialog onClose={() => setShowAppointments(false)} />}
     </header>
   )
 }

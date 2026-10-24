@@ -9,6 +9,7 @@ import SlotCalendar from '@/components/SlotCalendar'
 import { Skeleton } from '@/components/ui/skeleton'
 import WeekNav from '@/components/WeekNav'
 import { currentWeekStart, dayKey, weekDays } from '@/lib/slots'
+import { isMyBooking, useMyBookings } from '@/lib/myBookings'
 import { hasSeenTour, startTour } from '@/lib/tour'
 import type { Slot } from '@/types'
 
@@ -25,6 +26,8 @@ function BookPage() {
   const services = servicesQuery.data
   // Until the patient picks someone, the first doctor is selected.
   const doctorId = pickedDoctorId ?? doctors?.[0]?.id
+
+  const { data: myBookings = [] } = useMyBookings()
 
   const slotsQuery = useQuery({
     queryKey: ['slots', doctorId, dayKey(weekStart), serviceId],
@@ -79,6 +82,7 @@ function BookPage() {
         error={error}
         onRetry={retry}
         mode="book"
+        isMine={(slot) => isMyBooking(slot, myBookings)}
         onSelect={setSelectedSlot}
         onNextWeek={() => setWeekStart(addWeeks(weekStart, 1))}
       />

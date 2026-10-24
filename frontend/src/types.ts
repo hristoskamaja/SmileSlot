@@ -45,6 +45,10 @@ export type Booking = {
   created_at: string
 }
 
+// The response to creating a booking. Only here does the backend send the secret
+// cancel_token, which the patient needs to cancel later.
+export type CreatedBooking = Booking & { cancel_token: string }
+
 // What the "Add slot" form sends to POST /slots.
 export type SlotInput = {
   doctor_id: number

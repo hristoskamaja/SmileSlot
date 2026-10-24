@@ -1,0 +1,16 @@
+# Local PostgreSQL for development.
+# Host port 5433 because 5432 is often taken by a locally installed Postgres.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: smileslot
+      POSTGRES_PASSWORD: smileslot
+      POSTGRES_DB: smileslot
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

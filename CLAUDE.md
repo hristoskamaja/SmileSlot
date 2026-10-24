@@ -185,6 +185,7 @@ Provide `.env.example` files. **Never commit secrets or the service-account key.
 - **Before each phase, show a short plan and wait for my approval.**
 - Git: never commit on your own. When a logical step is done, show me a summary of the changes and a proposed commit message, and commit only after I approve. Never push, force-push, or rewrite history; I push myself.
 - Use clear commit messages (e.g. `feat(bookings): reject double booking with 409`).
+- Never add a `Co-Authored-By` trailer to commits.
 - Prefer simple, readable code over clever code. Use plain functions, clear names, and short comments only where the "why" isn't obvious.
 - Don't add libraries, features, or abstractions beyond this file without asking.
 - After each phase, tell me how to test it manually, and briefly summarize what changed so I can explain it in the interview.
